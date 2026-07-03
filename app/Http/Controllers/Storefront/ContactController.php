@@ -21,7 +21,7 @@ class ContactController extends Controller
     {
         $message = ContactMessage::create($request->validated());
 
-        $adminEmail = config('shop.contact_email');
+        $adminEmail = shop_config('contact_email');
 
         if ($adminEmail) {
             try {

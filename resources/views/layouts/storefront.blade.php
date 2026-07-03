@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', shop_name()) — {{ config('shop.tagline') }}</title>
-    <meta name="description" content="@yield('meta_description', config('shop.tagline'))">
+    <title>@yield('title', shop_name()) — {{ shop_config('tagline') }}</title>
+    <meta name="description" content="@yield('meta_description', shop_config('tagline'))">
     <link rel="canonical" href="{{ url()->current() }}">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=dm-sans:400,500,600,700&display=swap" rel="stylesheet" />
@@ -16,7 +16,7 @@
     {{-- Top bar --}}
     <div class="bg-brand-50 border-b border-brand-100 text-slate-600 text-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex flex-wrap items-center justify-between gap-2">
-            <p>{{ config('shop.contact_phone') }} · {{ config('shop.contact_address') }}</p>
+            <p>{{ shop_config('contact_phone') }} · {{ shop_config('contact_address') }}</p>
             <p class="text-brand-700 font-medium">Free delivery on orders above {{ shop_money(5000) }}</p>
         </div>
     </div>
@@ -127,7 +127,7 @@
                         </div>
                         <span class="text-xl font-bold text-slate-900">{{ shop_name() }}</span>
                     </div>
-                    <p class="text-slate-500 max-w-md">{{ config('shop.tagline') }}</p>
+                    <p class="text-slate-500 max-w-md">{{ shop_config('tagline') }}</p>
                 </div>
                 <div>
                     <h4 class="text-slate-900 font-semibold mb-4">Quick Links</h4>
@@ -140,9 +140,9 @@
                 <div>
                     <h4 class="text-slate-900 font-semibold mb-4">Contact</h4>
                     <ul class="space-y-2 text-slate-500">
-                        <li>{{ config('shop.contact_phone') }}</li>
-                        <li>{{ config('shop.contact_email') }}</li>
-                        <li>{{ config('shop.contact_address') }}</li>
+                        <li>{{ shop_config('contact_phone') }}</li>
+                        <li>{{ shop_config('contact_email') }}</li>
+                        <li>{{ shop_config('contact_address') }}</li>
                     </ul>
                 </div>
             </div>

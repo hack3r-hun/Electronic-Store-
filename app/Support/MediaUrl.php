@@ -55,4 +55,18 @@ class MediaUrl
     {
         return 'https://placehold.co/400x400/e2e8f0/64748b?text='.urlencode($text);
     }
+
+    public static function isLocalPath(?string $path): bool
+    {
+        return filled($path)
+            && ! str_starts_with($path, 'http://')
+            && ! str_starts_with($path, 'https://');
+    }
+
+    public static function deleteLocalFile(?string $path): void
+    {
+        if (self::isLocalPath($path) && Storage::disk('public')->exists($path)) {
+            Storage::disk('public')->delete($path);
+        }
+    }
 }

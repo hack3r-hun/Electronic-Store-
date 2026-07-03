@@ -11,29 +11,31 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
         then: function () {
-            Route::get('/_diag', function () {
-                $checks = [];
+            if (! app()->environment('production')) {
+                Route::get('/_diag', function () {
+                    $checks = [];
 
-                try {
-                    \Illuminate\Support\Facades\DB::connection()->getPdo();
-                    $checks['database'] = 'ok';
-                } catch (\Throwable $e) {
-                    $checks['database'] = $e->getMessage();
-                }
+                    try {
+                        \Illuminate\Support\Facades\DB::connection()->getPdo();
+                        $checks['database'] = 'ok';
+                    } catch (\Throwable $e) {
+                        $checks['database'] = $e->getMessage();
+                    }
 
-                $checks['spatie'] = class_exists(\Spatie\Permission\Traits\HasRoles::class) ? 'ok' : 'missing';
+                    $checks['spatie'] = class_exists(\Spatie\Permission\Traits\HasRoles::class) ? 'ok' : 'missing';
 
-                try {
-                    \Illuminate\Support\Facades\Cache::put('_diag_probe', '1', 10);
-                    $checks['cache'] = \Illuminate\Support\Facades\Cache::get('_diag_probe') === '1' ? 'ok' : 'fail';
-                } catch (\Throwable $e) {
-                    $checks['cache'] = $e->getMessage();
-                }
+                    try {
+                        \Illuminate\Support\Facades\Cache::put('_diag_probe', '1', 10);
+                        $checks['cache'] = \Illuminate\Support\Facades\Cache::get('_diag_probe') === '1' ? 'ok' : 'fail';
+                    } catch (\Throwable $e) {
+                        $checks['cache'] = $e->getMessage();
+                    }
 
-                $failed = collect($checks)->contains(fn ($v) => $v !== 'ok');
+                    $failed = collect($checks)->contains(fn ($v) => $v !== 'ok');
 
-                return response()->json($checks, $failed ? 500 : 200);
-            });
+                    return response()->json($checks, $failed ? 500 : 200);
+                });
+            }
 
             Route::middleware('web')
                 ->group(base_path('routes/admin.php'));

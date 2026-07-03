@@ -1,5 +1,38 @@
 <?php
 
+if (! function_exists('shop_config')) {
+    function shop_config(string $key, mixed $default = null): mixed
+    {
+        static $map = [
+            'name' => 'shop_name',
+            'tagline' => 'shop_tagline',
+            'tax_rate' => 'tax_rate',
+            'shipping_flat' => 'shipping_flat',
+            'contact_email' => 'contact_email',
+            'contact_phone' => 'contact_phone',
+            'contact_address' => 'contact_address',
+        ];
+
+        if (isset($map[$key])) {
+            try {
+                if (\Illuminate\Support\Facades\Schema::hasTable('settings')) {
+                    $value = \App\Models\Setting::get($map[$key]);
+
+                    if ($value !== null && $value !== '') {
+                        return in_array($key, ['tax_rate', 'shipping_flat'], true)
+                            ? (float) $value
+                            : $value;
+                    }
+                }
+            } catch (\Throwable) {
+                //
+            }
+        }
+
+        return config("shop.{$key}", $default);
+    }
+}
+
 if (! function_exists('shop_money')) {
     function shop_money(float|int|string $amount): string
     {
@@ -12,6 +45,6 @@ if (! function_exists('shop_money')) {
 if (! function_exists('shop_name')) {
     function shop_name(): string
     {
-        return config('shop.name', 'ElectroMart');
+        return (string) shop_config('name', 'ElectroMart');
     }
 }

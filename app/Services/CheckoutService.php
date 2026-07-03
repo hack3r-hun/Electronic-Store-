@@ -21,8 +21,8 @@ class CheckoutService
     public function calculateTotals(): array
     {
         $subtotal = $this->cartService->subtotal();
-        $tax = round($subtotal * (config('shop.tax_rate') / 100), 2);
-        $shipping = $subtotal > 0 ? (float) config('shop.shipping_flat') : 0;
+        $tax = round($subtotal * (shop_config('tax_rate', 0) / 100), 2);
+        $shipping = $subtotal > 0 ? (float) shop_config('shipping_flat', 0) : 0;
         $total = $subtotal + $tax + $shipping;
 
         return compact('subtotal', 'tax', 'shipping', 'total');
@@ -45,6 +45,19 @@ class CheckoutService
         $totals = $this->calculateTotals();
 
         return DB::transaction(function () use ($data, $paymentMethod, $items, $totals) {
+            $shippingAddress = [
+                'full_name' => $data['full_name'],
+                'phone' => $data['phone'],
+                'address_line' => $data['address_line'],
+                'city' => $data['city'],
+                'state' => $data['state'] ?? null,
+                'postal_code' => $data['postal_code'] ?? null,
+            ];
+
+            if (! empty($data['email'])) {
+                $shippingAddress['email'] = $data['email'];
+            }
+
             $order = Order::create([
                 'user_id' => Auth::id(),
                 'order_number' => 'EM-'.strtoupper(Str::random(8)),
@@ -57,16 +70,15 @@ class CheckoutService
                 'tax' => $totals['tax'],
                 'shipping' => $totals['shipping'],
                 'total' => $totals['total'],
-                'shipping_address' => [
-                    'full_name' => $data['full_name'],
-                    'phone' => $data['phone'],
-                    'address_line' => $data['address_line'],
-                    'city' => $data['city'],
-                    'state' => $data['state'] ?? null,
-                    'postal_code' => $data['postal_code'] ?? null,
-                ],
+                'shipping_address' => $shippingAddress,
                 'notes' => $data['notes'] ?? null,
             ]);
+
+            if (! Auth::id()) {
+                $guestToken = Str::random(40);
+                $order->update(['guest_access_token' => hash('sha256', $guestToken)]);
+                session()->put("guest_order_access.{$order->id}", $guestToken);
+            }
 
             foreach ($items as $item) {
                 OrderItem::create([

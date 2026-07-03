@@ -7,8 +7,8 @@ use App\Http\Requests\StoreProductRequest;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Support\MediaUrl;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -66,7 +66,7 @@ class ProductController extends Controller
     public function destroy(Product $product): RedirectResponse
     {
         foreach ($product->images as $image) {
-            Storage::disk('public')->delete($image->path);
+            MediaUrl::deleteLocalFile($image->path);
         }
 
         $product->delete();

@@ -22,6 +22,13 @@
                             <input type="text" name="phone" value="{{ old('phone', auth()->user()?->phone) }}" required class="input-field">
                             @error('phone')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
                         </div>
+                        @guest
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Email *</label>
+                            <input type="email" name="email" value="{{ old('email') }}" required class="input-field" placeholder="For order confirmation">
+                            @error('email')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
+                        </div>
+                        @endguest
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-2">City *</label>
                             <input type="text" name="city" value="{{ old('city') }}" required class="input-field">

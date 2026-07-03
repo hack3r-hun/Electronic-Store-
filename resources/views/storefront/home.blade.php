@@ -222,8 +222,8 @@
                     <p class="text-slate-600 mb-8 max-w-xl mx-auto text-lg">Our team knows every product on the shelf. Call or message us — we're happy to help.</p>
                     <div class="flex flex-wrap justify-center gap-4">
                         <a href="{{ route('contact') }}" class="btn-primary">Contact Us</a>
-                        <a href="tel:{{ preg_replace('/[^0-9+]/', '', config('shop.contact_phone')) }}" class="btn-outline inline-flex items-center gap-2">
-                            <x-icon name="phone" class="w-5 h-5" /> {{ config('shop.contact_phone') }}
+                        <a href="tel:{{ preg_replace('/[^0-9+]/', '', shop_config('contact_phone')) }}" class="btn-outline inline-flex items-center gap-2">
+                            <x-icon name="phone" class="w-5 h-5" /> {{ shop_config('contact_phone') }}
                         </a>
                     </div>
                 </div>

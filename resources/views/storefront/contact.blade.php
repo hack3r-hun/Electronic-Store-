@@ -19,9 +19,9 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div class="space-y-5">
                 @foreach([
-                    ['title' => 'Phone', 'value' => config('shop.contact_phone'), 'icon' => 'phone', 'desc' => 'Mon–Sat, 9am–7pm'],
-                    ['title' => 'Email', 'value' => config('shop.contact_email'), 'icon' => 'mail', 'desc' => 'We reply within 24 hours'],
-                    ['title' => 'Store Address', 'value' => config('shop.contact_address'), 'icon' => 'map-pin', 'desc' => 'Visit our showroom'],
+                    ['title' => 'Phone', 'value' => shop_config('contact_phone'), 'icon' => 'phone', 'desc' => 'Mon–Sat, 9am–7pm'],
+                    ['title' => 'Email', 'value' => shop_config('contact_email'), 'icon' => 'mail', 'desc' => 'We reply within 24 hours'],
+                    ['title' => 'Store Address', 'value' => shop_config('contact_address'), 'icon' => 'map-pin', 'desc' => 'Visit our showroom'],
                 ] as $i => $info)
                     <x-reveal type="fade-right" :delay="$i * 100">
                         <x-store-card class="h-full card-glow group">

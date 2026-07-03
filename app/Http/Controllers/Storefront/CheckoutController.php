@@ -3,15 +3,14 @@
 namespace App\Http\Controllers\Storefront;
 
 use App\Enums\PaymentMethod;
+use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CheckoutRequest;
-use App\Mail\OrderPlaced;
 use App\Models\Order;
 use App\Services\CartService;
 use App\Services\CheckoutService;
 use App\Services\PaymentService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 
 class CheckoutController extends Controller
@@ -50,7 +49,7 @@ class CheckoutController extends Controller
                     ->with('info', 'Order saved. Configure Stripe keys in .env to enable card payments.');
             }
 
-            $this->sendOrderEmail($order);
+            $this->paymentService->sendOrderConfirmation($order);
 
             return redirect()->route('checkout.success', $order)
                 ->with('success', 'Order placed successfully! Pay cash on delivery.');
@@ -67,6 +66,10 @@ class CheckoutController extends Controller
             return redirect()->route('checkout.success', $order);
         }
 
+        if ($order->payment_status === PaymentStatus::Paid) {
+            return redirect()->route('checkout.success', $order);
+        }
+
         if (! $this->paymentService->isConfigured()) {
             return redirect()->route('checkout.success', $order)
                 ->with('info', 'Stripe is not configured. Order saved as pending.');
@@ -74,9 +77,9 @@ class CheckoutController extends Controller
 
         try {
             $payment = $this->paymentService->createPaymentIntent($order);
-        } catch (\Throwable $e) {
+        } catch (\Throwable) {
             return redirect()->route('checkout.success', $order)
-                ->with('error', 'Could not initialize payment: '.$e->getMessage());
+                ->with('error', 'Could not initialize payment. Please try again or contact support.');
         }
 
         return view('storefront.checkout.pay', [
@@ -89,8 +92,15 @@ class CheckoutController extends Controller
     public function confirmPayment(Order $order): RedirectResponse
     {
         $this->authorizeOrder($order);
-        $this->paymentService->markPaid($order);
-        $this->sendOrderEmail($order);
+
+        $intentId = $order->payment?->stripe_payment_intent_id;
+
+        if (! $intentId || ! $this->paymentService->verifyAndMarkPaid($order, $intentId)) {
+            return redirect()->route('checkout.pay', $order)
+                ->with('error', 'Payment not completed. Please try again.');
+        }
+
+        $this->paymentService->sendOrderConfirmation($order->fresh());
 
         return redirect()->route('checkout.success', $order)
             ->with('success', 'Payment successful! Thank you for your order.');
@@ -98,28 +108,29 @@ class CheckoutController extends Controller
 
     public function success(Order $order)
     {
-        $this->authorizeOrder($order, allowGuest: true);
+        $this->authorizeOrder($order);
 
         return view('storefront.checkout.success', compact('order'));
     }
 
-    protected function authorizeOrder(Order $order, bool $allowGuest = false): void
+    protected function authorizeOrder(Order $order): void
     {
-        if ($order->user_id && $order->user_id !== auth()->id()) {
+        if ($order->user_id) {
+            if (! auth()->check() || auth()->id() !== $order->user_id) {
+                abort(403);
+            }
+
+            return;
+        }
+
+        $sessionToken = session("guest_order_access.{$order->id}");
+
+        if (! $sessionToken || ! $order->guest_access_token) {
             abort(403);
         }
 
-        if (! $allowGuest && ! $order->user_id && ! auth()->check()) {
-            // guest orders allowed on success page only
-        }
-    }
-
-    protected function sendOrderEmail(Order $order): void
-    {
-        $email = $order->user?->email ?? ($order->shipping_address['email'] ?? null);
-
-        if ($email) {
-            Mail::to($email)->send(new OrderPlaced($order));
+        if (! hash_equals($order->guest_access_token, hash('sha256', $sessionToken))) {
+            abort(403);
         }
     }
 }

@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCategoryRequest;
 use App\Models\Category;
+use App\Support\MediaUrl;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -55,9 +55,7 @@ class CategoryController extends Controller
         $data['is_active'] = $request->boolean('is_active', true);
 
         if ($request->hasFile('image')) {
-            if ($category->image) {
-                Storage::disk('public')->delete($category->image);
-            }
+            MediaUrl::deleteLocalFile($category->image);
             $data['image'] = $request->file('image')->store('categories', 'public');
         }
 
@@ -72,9 +70,7 @@ class CategoryController extends Controller
             return back()->with('error', 'Cannot delete category with products.');
         }
 
-        if ($category->image) {
-            Storage::disk('public')->delete($category->image);
-        }
+        MediaUrl::deleteLocalFile($category->image);
 
         $category->delete();
 

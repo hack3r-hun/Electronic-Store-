@@ -16,8 +16,8 @@ class StripeWebhookController extends Controller
                 $request->getContent(),
                 $request->header('Stripe-Signature')
             );
-        } catch (\Throwable $e) {
-            return response($e->getMessage(), 400);
+        } catch (\Throwable) {
+            return response('Webhook error', 400);
         }
 
         return response('OK', 200);

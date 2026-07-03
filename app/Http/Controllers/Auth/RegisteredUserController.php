@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\EmailVerificationService;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -36,12 +35,11 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'phone' => $request->phone,
             'password' => Hash::make($request->password),
-            'verification_method' => $request->verification_method,
         ]);
 
-        $user->assignRole('customer');
+        $user->forceFill(['verification_method' => $request->verification_method])->save();
 
-        event(new Registered($user));
+        $user->assignRole('customer');
 
         Auth::login($user);
 
