@@ -21,6 +21,12 @@ class AppServiceProvider extends ServiceProvider
         if ($this->app->environment('production')) {
             URL::forceScheme('https');
 
+            config([
+                'session.secure' => true,
+                'session.same_site' => 'lax',
+                'session.domain' => null,
+            ]);
+
             if (config('logging.default') === 'stack' || config('logging.default') === 'single') {
                 config(['logging.default' => 'stderr']);
             }

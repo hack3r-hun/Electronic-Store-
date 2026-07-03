@@ -156,7 +156,9 @@ return [
     |
     */
 
-    'domain' => env('SESSION_DOMAIN'),
+    'domain' => ($domain = env('SESSION_DOMAIN')) && ! in_array($domain, ['null', 'NULL'], true)
+        ? $domain
+        : null,
 
     /*
     |--------------------------------------------------------------------------
@@ -169,7 +171,7 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    'secure' => env('SESSION_SECURE_COOKIE', env('APP_ENV') === 'production'),
 
     /*
     |--------------------------------------------------------------------------
