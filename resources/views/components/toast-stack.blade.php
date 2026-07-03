@@ -23,7 +23,7 @@
         @endphp
         <div x-init="$store.toast.push(@js($statusMessage), 'success')"></div>
     @endif
-    @if($errors->any())
+    @if(isset($errors) && $errors->any())
         <div x-init="$store.toast.push(@js($errors->first()), 'error', 7000)"></div>
     @endif
 

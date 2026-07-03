@@ -62,8 +62,8 @@ Copy the `base64:...` value.
 | `APP_DEBUG` | `false` |
 | `APP_URL` | Your Railway URL (e.g. `https://electromart-production.up.railway.app`) |
 | `LOG_CHANNEL` | `stderr` |
-| `SESSION_DRIVER` | `database` |
-| `CACHE_STORE` | `database` |
+| `SESSION_DRIVER` | `file` (recommended on Railway; `database` also works) |
+| `CACHE_STORE` | `file` (recommended on Railway; `database` also works) |
 | `FILESYSTEM_DISK` | `public` |
 | `RUN_SEEDER` | `true` (first deploy only) |
 
@@ -124,9 +124,9 @@ For production at scale, use S3-compatible storage (`AWS_*` variables).
 
 | Issue | Fix |
 |-------|-----|
-| 500 error | Check **Deploy Logs**; ensure `APP_KEY` and DB vars are set |
+| 500 error | Open `https://YOUR-APP.up.railway.app/_diag` — shows DB/cache/spatie status. Check **Deploy Logs** for the real exception. Ensure `APP_KEY`, `APP_URL`, and `DB_*` are set. |
 | CSS/JS missing | Rebuild — assets are compiled in Docker during deploy |
-| Database error | Verify MySQL plugin is linked and `DB_*` variables reference it |
+| Database error | Verify MySQL plugin is linked and `DB_*` variables reference it. Do **not** set `DB_URL` unless you know the full connection string. |
 | OTP email not sent | Configure `MAIL_*` variables |
 
 ## Redeploy

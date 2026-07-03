@@ -20,6 +20,10 @@ class AppServiceProvider extends ServiceProvider
     {
         if ($this->app->environment('production')) {
             URL::forceScheme('https');
+
+            if (config('logging.default') === 'stack' || config('logging.default') === 'single') {
+                config(['logging.default' => 'stderr']);
+            }
         }
 
         View::composer('layouts.storefront', function ($view) {
