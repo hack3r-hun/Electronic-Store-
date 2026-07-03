@@ -1,0 +1,100 @@
+<?php
+
+namespace App\Services;
+
+use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
+use App\Enums\PaymentStatus;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Payment;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+
+class CheckoutService
+{
+    public function __construct(
+        protected CartService $cartService
+    ) {}
+
+    public function calculateTotals(): array
+    {
+        $subtotal = $this->cartService->subtotal();
+        $tax = round($subtotal * (config('shop.tax_rate') / 100), 2);
+        $shipping = $subtotal > 0 ? (float) config('shop.shipping_flat') : 0;
+        $total = $subtotal + $tax + $shipping;
+
+        return compact('subtotal', 'tax', 'shipping', 'total');
+    }
+
+    public function placeOrder(array $data, PaymentMethod $paymentMethod): Order
+    {
+        $items = $this->cartService->items();
+
+        if ($items->isEmpty()) {
+            throw new \RuntimeException('Your cart is empty.');
+        }
+
+        foreach ($items as $item) {
+            if ($item->quantity > $item->product->stock_quantity) {
+                throw new \RuntimeException("Not enough stock for {$item->product->name}.");
+            }
+        }
+
+        $totals = $this->calculateTotals();
+
+        return DB::transaction(function () use ($data, $paymentMethod, $items, $totals) {
+            $order = Order::create([
+                'user_id' => Auth::id(),
+                'order_number' => 'EM-'.strtoupper(Str::random(8)),
+                'status' => $paymentMethod === PaymentMethod::Cod
+                    ? OrderStatus::AwaitingCod
+                    : OrderStatus::Pending,
+                'payment_method' => $paymentMethod,
+                'payment_status' => PaymentStatus::Pending,
+                'subtotal' => $totals['subtotal'],
+                'tax' => $totals['tax'],
+                'shipping' => $totals['shipping'],
+                'total' => $totals['total'],
+                'shipping_address' => [
+                    'full_name' => $data['full_name'],
+                    'phone' => $data['phone'],
+                    'address_line' => $data['address_line'],
+                    'city' => $data['city'],
+                    'state' => $data['state'] ?? null,
+                    'postal_code' => $data['postal_code'] ?? null,
+                ],
+                'notes' => $data['notes'] ?? null,
+            ]);
+
+            foreach ($items as $item) {
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $item->product_id,
+                    'product_name' => $item->product->name,
+                    'product_sku' => $item->product->sku,
+                    'quantity' => $item->quantity,
+                    'unit_price' => $item->product->effective_price,
+                    'line_total' => $item->line_total,
+                ]);
+
+                $item->product->decrement('stock_quantity', $item->quantity);
+            }
+
+            Payment::create([
+                'order_id' => $order->id,
+                'status' => PaymentStatus::Pending,
+                'amount' => $totals['total'],
+            ]);
+
+            if ($paymentMethod === PaymentMethod::Cod) {
+                $order->update(['payment_status' => PaymentStatus::Pending]);
+            }
+
+            $this->cartService->clear();
+
+            return $order->load('items');
+        });
+    }
+}

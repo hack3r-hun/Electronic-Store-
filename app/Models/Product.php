@@ -1,0 +1,85 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
+
+class Product extends Model
+{
+    protected $fillable = [
+        'category_id',
+        'name',
+        'slug',
+        'sku',
+        'description',
+        'price',
+        'sale_price',
+        'stock_quantity',
+        'low_stock_threshold',
+        'specifications',
+        'is_active',
+        'is_featured',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'price' => 'decimal:2',
+            'sale_price' => 'decimal:2',
+            'specifications' => 'array',
+            'is_active' => 'boolean',
+            'is_featured' => 'boolean',
+        ];
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function images(): HasMany
+    {
+        return $this->hasMany(ProductImage::class)->orderBy('sort_order');
+    }
+
+    public function primaryImage(): ?ProductImage
+    {
+        return $this->images()->where('is_primary', true)->first()
+            ?? $this->images()->first();
+    }
+
+    public function getEffectivePriceAttribute(): float
+    {
+        return (float) ($this->sale_price ?? $this->price);
+    }
+
+    public function getIsOnSaleAttribute(): bool
+    {
+        return $this->sale_price !== null && $this->sale_price < $this->price;
+    }
+
+    public function getIsInStockAttribute(): bool
+    {
+        return $this->stock_quantity > 0;
+    }
+
+    public function getIsLowStockAttribute(): bool
+    {
+        return $this->stock_quantity > 0
+            && $this->stock_quantity <= $this->low_stock_threshold;
+    }
+
+    public function getImageUrlAttribute(): string
+    {
+        $image = $this->primaryImage();
+
+        if ($image) {
+            return Storage::url($image->path);
+        }
+
+        return 'https://placehold.co/400x400/e2e8f0/64748b?text='.urlencode($this->name);
+    }
+}
