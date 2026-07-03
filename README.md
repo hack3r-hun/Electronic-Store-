@@ -8,7 +8,7 @@ A full-featured Laravel e-commerce application for selling electronic items (bul
 |-------|------------|
 | Backend | Laravel 12, PHP 8.2+ |
 | Frontend | Blade, Tailwind CSS, Alpine.js, Vite |
-| Database | SQLite (dev) / MySQL (production) |
+| Database | MySQL 8 |
 | Auth | Laravel Breeze + Spatie Permission |
 | Payments | Stripe (PaymentIntents) + Cash on Delivery |
 | PDF | DomPDF (invoices) |
@@ -36,11 +36,20 @@ A full-featured Laravel e-commerce application for selling electronic items (bul
 
 ## Design Theme
 
-- **Teal** primary — clean and trustworthy
-- **Amber** accent — clear call-to-action buttons
+- **Sky blue** primary — clean and trustworthy
 - Subtle fade-in animations, card hover effects, smooth transitions
 
-## Quick Start
+## Quick Start (MySQL)
+
+### 1. Start MySQL (Docker — recommended)
+
+```bash
+docker compose up -d
+```
+
+This creates database `electromart` with user `electromart` / password `secret`.
+
+### 2. Install & run
 
 ```bash
 composer install
@@ -54,6 +63,21 @@ php artisan serve
 ```
 
 Visit: http://127.0.0.1:8000
+
+### Already have MySQL (XAMPP / WAMP / local install)?
+
+Create a database and user, then set in `.env`:
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=electromart
+DB_USERNAME=your_user
+DB_PASSWORD=your_password
+```
+
+Then run `php artisan migrate:fresh --seed`.
 
 ## Demo Accounts
 
