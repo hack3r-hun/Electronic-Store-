@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use App\Support\MediaUrl;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
@@ -77,9 +77,9 @@ class Product extends Model
         $image = $this->primaryImage();
 
         if ($image) {
-            return Storage::url($image->path);
+            return MediaUrl::resolve($image->path, MediaUrl::productFallback($this->name));
         }
 
-        return 'https://placehold.co/400x400/e2e8f0/64748b?text='.urlencode($this->name);
+        return MediaUrl::productFallback($this->name);
     }
 }

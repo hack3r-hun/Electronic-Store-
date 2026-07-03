@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use App\Support\MediaUrl;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Facades\Storage;
 
 class ProductImage extends Model
 {
@@ -29,6 +29,10 @@ class ProductImage extends Model
 
     public function getUrlAttribute(): string
     {
-        return Storage::url($this->path);
+        $fallback = $this->relationLoaded('product')
+            ? MediaUrl::productFallback($this->product?->name)
+            : MediaUrl::productFallback(null);
+
+        return MediaUrl::resolve($this->path, $fallback);
     }
 }

@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use App\Support\MediaUrl;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Storage;
 
 class Category extends Model
 {
@@ -48,10 +48,6 @@ class Category extends Model
 
     public function getImageUrlAttribute(): string
     {
-        if ($this->image && Storage::disk('public')->exists($this->image)) {
-            return Storage::url($this->image);
-        }
-
-        return 'https://images.unsplash.com/photo-1581092162384-8987c1d64718?w=400&h=300&fit=crop';
+        return MediaUrl::resolve($this->image, MediaUrl::categoryFallback($this->name));
     }
 }

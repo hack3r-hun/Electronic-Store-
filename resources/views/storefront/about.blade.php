@@ -33,7 +33,7 @@
                 <x-reveal type="fade-left" delay="150">
                     <div class="relative">
                         <div class="aspect-[4/3] rounded-3xl overflow-hidden shadow-soft border border-slate-100">
-                            <img src="{{ asset('storage/about/store.jpg') }}" alt="{{ shop_name() }} store" class="w-full h-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=900&h=600&fit=crop'">
+                            <img src="{{ config('media.about_store') }}" alt="{{ shop_name() }} store" class="w-full h-full object-cover">
                         </div>
                         <div class="absolute -bottom-6 -left-6 bg-brand-700 text-white px-6 py-4 rounded-2xl shadow-xl font-bold text-lg card-hover">
                             Est. 2010
@@ -168,7 +168,7 @@
                     <x-reveal type="scale" :delay="$i * 100">
                         <div class="group text-center p-6 bg-white rounded-2xl border border-slate-100 shadow-card card-hover">
                             <div class="w-24 h-24 mx-auto mb-4 rounded-2xl overflow-hidden ring-4 ring-brand-50 group-hover:ring-brand-200 transition-all duration-500">
-                                <img src="{{ asset('storage/team/'.$member['photo'].'.jpg') }}" alt="{{ $member['name'] }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($member['name']) }}&background=0ea5e9&color=fff&size=200'">
+                                <img src="{{ \App\Support\MediaUrl::teamPhoto($member['photo']) }}" alt="{{ $member['name'] }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
                             </div>
                             <h3 class="font-bold text-slate-900">{{ $member['name'] }}</h3>
                             <p class="text-sm text-brand-600 font-medium mt-1">{{ $member['role'] }}</p>
