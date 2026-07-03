@@ -17,7 +17,7 @@ class MediaUrl
         }
 
         if (Storage::disk('public')->exists($path)) {
-            return Storage::url($path);
+            return Storage::disk('public')->url($path);
         }
 
         return $fallback ?? self::placeholder('Image');

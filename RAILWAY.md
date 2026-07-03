@@ -114,17 +114,49 @@ Health check: `/up`
 | Admin | `admin@electromart.local` | `password` |
 | Customer | `customer@electromart.local` | `password` |
 
-## Product images
+## Product images (production — admin uploads)
 
-Uploaded images are stored on the server disk. On Railway, add a **Volume** mounted to `/var/www/html/storage/app/public` if you need uploads to survive redeploys.
+Seeded demo images use external URLs and work without extra setup.
 
-For production at scale, use S3-compatible storage (`AWS_*` variables).
+**Admin-uploaded photos** are saved to `storage/app/public`. On Railway the container disk is **wiped on every redeploy** unless you add a Volume.
+
+### Required for production uploads (Railway Volume)
+
+1. Open your **web service** on [railway.app](https://railway.app)
+2. Go to **Settings** → **Volumes** → **Add Volume**
+3. Set mount path exactly:
+
+   ```
+   /var/www/html/storage/app/public
+   ```
+
+4. Click **Add** and **Redeploy** the web service
+5. In **Variables**, confirm:
+
+   | Variable | Value |
+   |----------|-------|
+   | `FILESYSTEM_DISK` | `public` |
+   | `APP_URL` | `https://your-app.up.railway.app` (must include `https://`) |
+
+6. **Push latest code** from GitHub (image primary + upload fixes), then redeploy
+7. Admin → Products → Edit → remove old seeded image (×) → upload your photo → Save
+8. Hard refresh the storefront (`Ctrl+Shift+R`)
+
+Uploaded images now survive redeploys because they live on the Volume.
+
+### After changing images
+
+- Old Unsplash seeded image still showing? **Edit product** → delete old thumbnails (×) → upload new image → Save
+- Image URL 404? Check `APP_URL` has `https://` and redeploy logs show `Linking public/storage`
+
+For production at scale, you can later switch to S3-compatible storage (`AWS_*` variables).
 
 ## Troubleshooting
 
 | Issue | Fix |
 |-------|-----|
 | 500 error | Open `https://YOUR-APP.up.railway.app/_diag` — shows DB/cache/spatie status. Check **Deploy Logs** for the real exception. Ensure `APP_KEY`, `APP_URL`, and `DB_*` are set. |
+| Uploaded images not showing | Add Railway **Volume** at `/var/www/html/storage/app/public`, set `FILESYSTEM_DISK=public`, push latest code, redeploy, re-upload in admin |
 | CSS/JS missing | Rebuild — assets are compiled in Docker during deploy |
 | Database error | Verify MySQL plugin is linked and `DB_*` variables reference it. Do **not** set `DB_URL` unless you know the full connection string. |
 | OTP email not sent | Configure `MAIL_*` variables |
