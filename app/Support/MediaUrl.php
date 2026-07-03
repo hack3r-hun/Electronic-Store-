@@ -63,6 +63,11 @@ class MediaUrl
             && ! str_starts_with($path, 'https://');
     }
 
+    public static function localFileExists(?string $path): bool
+    {
+        return self::isLocalPath($path) && Storage::disk('public')->exists($path);
+    }
+
     public static function deleteLocalFile(?string $path): void
     {
         if (self::isLocalPath($path) && Storage::disk('public')->exists($path)) {

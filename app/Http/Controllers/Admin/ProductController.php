@@ -74,15 +74,43 @@ class ProductController extends Controller
         return redirect()->route('admin.products.index')->with('success', 'Product deleted.');
     }
 
+    public function destroyImage(Product $product, ProductImage $image): RedirectResponse
+    {
+        if ($image->product_id !== $product->id) {
+            abort(404);
+        }
+
+        $wasPrimary = $image->is_primary;
+        MediaUrl::deleteLocalFile($image->path);
+        $image->delete();
+
+        if ($wasPrimary) {
+            $product->images()->first()?->update(['is_primary' => true]);
+        }
+
+        return back()->with('success', 'Image removed.');
+    }
+
     protected function storeImages(Product $product, array $images): void
     {
-        foreach ($images as $index => $file) {
+        $files = array_values(array_filter($images));
+
+        if ($files === []) {
+            return;
+        }
+
+        $product->images()->update(['is_primary' => false]);
+
+        $existingCount = $product->images()->count();
+
+        foreach ($files as $index => $file) {
             $path = $file->store('products', 'public');
+
             ProductImage::create([
                 'product_id' => $product->id,
                 'path' => $path,
-                'is_primary' => $product->images()->count() === 0 && $index === 0,
-                'sort_order' => $product->images()->count() + $index,
+                'is_primary' => $index === 0,
+                'sort_order' => $existingCount + $index,
             ]);
         }
     }

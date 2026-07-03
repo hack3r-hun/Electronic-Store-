@@ -47,8 +47,19 @@ class Product extends Model
 
     public function primaryImage(): ?ProductImage
     {
-        return $this->images()->where('is_primary', true)->first()
-            ?? $this->images()->first();
+        $images = $this->relationLoaded('images')
+            ? $this->images
+            : $this->images()->get();
+
+        $localImage = $images->first(
+            fn (ProductImage $image) => MediaUrl::localFileExists($image->path)
+        );
+
+        if ($localImage) {
+            return $localImage;
+        }
+
+        return $images->where('is_primary', true)->first() ?? $images->first();
     }
 
     public function getEffectivePriceAttribute(): float

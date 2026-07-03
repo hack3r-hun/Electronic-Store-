@@ -49,12 +49,25 @@
                 @if($product->exists && $product->images->isNotEmpty())
                     <div class="flex flex-wrap gap-3 mb-3">
                         @foreach($product->images as $image)
-                            <img src="{{ $image->url }}" alt="" class="w-20 h-20 object-cover rounded-xl border border-slate-100">
+                            <div class="relative group">
+                                <img src="{{ $image->url }}" alt="" class="w-20 h-20 object-cover rounded-xl border border-slate-100">
+                                @if($image->is_primary)
+                                    <span class="absolute -top-2 -left-2 text-[10px] font-bold bg-brand-600 text-white px-1.5 py-0.5 rounded">Main</span>
+                                @endif
+                                <form action="{{ route('admin.products.images.destroy', [$product, $image]) }}" method="POST" class="absolute -top-2 -right-2"
+                                      onsubmit="return confirm('Remove this image?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="w-6 h-6 rounded-full bg-red-500 text-white text-xs leading-none opacity-0 group-hover:opacity-100 transition-opacity" title="Remove image">×</button>
+                                </form>
+                            </div>
                         @endforeach
                     </div>
                 @endif
-                <input type="file" name="images[]" multiple accept="image/*" class="input-field">
-                <p class="text-xs text-slate-500 mt-1">Upload one or more product photos (JPG, PNG, max 2MB each)</p>
+                <input type="file" name="images[]" multiple accept="image/jpeg,image/png,image/webp,image/jpg" class="input-field">
+                <p class="text-xs text-slate-500 mt-1">Upload photos (JPG, PNG, WebP — max 2MB each). New uploads become the main image.</p>
+                @error('images')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
+                @error('images.*')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
             </div>
             <div class="flex gap-6">
                 <label class="flex items-center gap-2"><input type="checkbox" name="is_active" value="1" @checked(old('is_active', $product->is_active ?? true)) class="rounded text-brand-600"> Active</label>
