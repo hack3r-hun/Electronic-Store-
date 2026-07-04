@@ -4,14 +4,17 @@ namespace App\Mail;
 
 use App\Models\ContactMessage;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class ContactFormSubmitted extends Mailable
+class ContactFormSubmitted extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
+
+    public bool $afterCommit = true;
 
     public function __construct(public ContactMessage $message) {}
 

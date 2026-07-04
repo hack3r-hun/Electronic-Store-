@@ -98,9 +98,17 @@ Railway builds the Docker image and runs:
 
 - `php artisan migrate --force`
 - `php artisan db:seed --force` (if `RUN_SEEDER=true`)
-- `php artisan serve` on Railway's `PORT`
+- `php artisan queue:work` (background emails) and `php artisan schedule:work` (stale-order cleanup)
+- **FrankenPHP** web server on Railway's `PORT` (with OPcache; serves uploaded images and assets directly)
 
 Health check: `/up`
+
+**Queued emails:** order confirmations and contact notifications are sent via the
+`database` queue. If an email fails after 3 attempts it lands in the `failed_jobs`
+table — retry with `php artisan queue:retry all` from a Railway shell.
+
+**Important:** confirm `APP_DEBUG` is **not** set to `true` in Railway variables —
+debug mode exposes stack traces (and dev OTP codes) to visitors.
 
 ## 8. Custom domain (optional)
 
