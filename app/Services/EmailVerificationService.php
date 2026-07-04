@@ -25,7 +25,9 @@ class EmailVerificationService
         } catch (\Throwable $e) {
             Log::warning('OTP email failed: '.$e->getMessage(), ['user_id' => $user->id]);
 
-            if (config('app.debug')) {
+            // Only local dev may surface the OTP on screen — never tie this to
+            // APP_DEBUG, which could accidentally be enabled in production.
+            if (app()->environment('local')) {
                 session(['dev_otp' => $otp]);
 
                 return;
@@ -34,7 +36,7 @@ class EmailVerificationService
             throw $e;
         }
 
-        if (config('app.debug')) {
+        if (app()->environment('local')) {
             session(['dev_otp' => $otp]);
         }
     }

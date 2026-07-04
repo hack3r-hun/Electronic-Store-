@@ -35,7 +35,12 @@
         <div class="space-y-6">
             <div class="bg-white rounded-2xl border border-slate-100 shadow-card p-6">
                 <h2 class="font-semibold mb-4">Update Status</h2>
-                <form action="{{ route('admin.orders.status', $order) }}" method="POST" class="space-y-3">
+                <form
+                    action="{{ route('admin.orders.status', $order) }}"
+                    method="POST"
+                    class="space-y-3"
+                    onsubmit="return confirm('Update the order status? Marking a COD order as Delivered also marks it as Paid, and cancelling restores stock.')"
+                >
                     @csrf @method('PATCH')
                     <select name="status" class="input-field">
                         @foreach(\App\Enums\OrderStatus::cases() as $status)
