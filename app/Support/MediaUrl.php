@@ -2,10 +2,14 @@
 
 namespace App\Support;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 class MediaUrl
 {
+    /** @var array<string, bool> */
+    protected static array $existsMemo = [];
+
     public static function resolve(?string $path, ?string $fallback = null): string
     {
         if (blank($path)) {
@@ -16,11 +20,38 @@ class MediaUrl
             return $path;
         }
 
-        if (Storage::disk('public')->exists($path)) {
+        if (self::fileExists($path)) {
             return Storage::disk('public')->url($path);
         }
 
         return $fallback ?? self::placeholder('Image');
+    }
+
+    /**
+     * Cached Storage::exists — listing pages resolve dozens of images per
+     * request, and each uncached check is a filesystem stat.
+     */
+    public static function fileExists(string $path): bool
+    {
+        if (isset(self::$existsMemo[$path])) {
+            return self::$existsMemo[$path];
+        }
+
+        return self::$existsMemo[$path] = Cache::remember(
+            'media_exists:'.md5($path),
+            now()->addMinutes(5),
+            fn () => Storage::disk('public')->exists($path)
+        );
+    }
+
+    public static function forgetExists(?string $path): void
+    {
+        if (blank($path)) {
+            return;
+        }
+
+        unset(self::$existsMemo[$path]);
+        Cache::forget('media_exists:'.md5($path));
     }
 
     public static function categoryFallback(?string $name): string
@@ -65,7 +96,7 @@ class MediaUrl
 
     public static function localFileExists(?string $path): bool
     {
-        return self::isLocalPath($path) && Storage::disk('public')->exists($path);
+        return self::isLocalPath($path) && self::fileExists($path);
     }
 
     public static function deleteLocalFile(?string $path): void
@@ -73,5 +104,7 @@ class MediaUrl
         if (self::isLocalPath($path) && Storage::disk('public')->exists($path)) {
             Storage::disk('public')->delete($path);
         }
+
+        self::forgetExists($path);
     }
 }

@@ -34,6 +34,7 @@ class CategoryController extends Controller
 
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('categories', 'public');
+            MediaUrl::forgetExists($data['image']);
         }
 
         Category::create($data);
@@ -58,6 +59,7 @@ class CategoryController extends Controller
         if ($request->hasFile('image')) {
             MediaUrl::deleteLocalFile($category->image);
             $data['image'] = $request->file('image')->store('categories', 'public');
+            MediaUrl::forgetExists($data['image']);
         }
 
         $category->update($data);

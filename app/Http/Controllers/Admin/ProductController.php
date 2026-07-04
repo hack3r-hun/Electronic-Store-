@@ -116,6 +116,7 @@ class ProductController extends Controller
 
         foreach ($files as $index => $file) {
             $path = $file->store('products', 'public');
+            MediaUrl::forgetExists($path);
 
             ProductImage::create([
                 'product_id' => $product->id,

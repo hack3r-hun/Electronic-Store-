@@ -49,6 +49,23 @@ php artisan config:cache
 php artisan route:cache 2>/dev/null || echo "WARN: route:cache skipped"
 php artisan view:cache 2>/dev/null || echo "WARN: view:cache skipped"
 
-echo "ElectroMart starting on port ${PORT:-8080}"
+# Queue worker + scheduler run alongside the web server, auto-restarting on exit
+(
+    while true; do
+        php artisan queue:work --tries=3 --max-time=3600 --sleep=3 || true
+        echo "queue:work exited — restarting in 2s"
+        sleep 2
+    done
+) &
+
+(
+    while true; do
+        php artisan schedule:work || true
+        echo "schedule:work exited — restarting in 5s"
+        sleep 5
+    done
+) &
+
+echo "ElectroMart starting on port ${PORT:-8080} (FrankenPHP)"
 echo "  session=${SESSION_DRIVER} cache=${CACHE_STORE} filesystem=${FILESYSTEM_DISK}"
-exec php artisan serve --host=0.0.0.0 --port="${PORT:-8080}"
+exec frankenphp php-server -r public/ -l ":${PORT:-8080}"

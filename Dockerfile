@@ -1,15 +1,7 @@
-# ElectroMart — production image for Railway
-FROM php:8.3-cli-bookworm AS base
+# ElectroMart — production image for Railway (FrankenPHP + OPcache)
+FROM dunglas/frankenphp:1-php8.3-bookworm AS base
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    git \
-    unzip \
-    libzip-dev \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    libpq-dev \
-    && docker-php-ext-install \
+RUN install-php-extensions \
         bcmath \
         exif \
         gd \
@@ -19,9 +11,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         pdo_pgsql \
         xml \
         zip \
+        opcache \
     && echo "upload_max_filesize=6M" > /usr/local/etc/php/conf.d/uploads.ini \
-    && echo "post_max_size=12M" >> /usr/local/etc/php/conf.d/uploads.ini \
-    && rm -rf /var/lib/apt/lists/*
+    && echo "post_max_size=12M" >> /usr/local/etc/php/conf.d/uploads.ini
+
+COPY docker/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 

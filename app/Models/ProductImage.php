@@ -2,12 +2,19 @@
 
 namespace App\Models;
 
+use App\Support\HomeCache;
 use App\Support\MediaUrl;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductImage extends Model
 {
+    protected static function booted(): void
+    {
+        static::saved(fn () => HomeCache::flush());
+        static::deleted(fn () => HomeCache::flush());
+    }
+
     protected $fillable = [
         'product_id',
         'path',
