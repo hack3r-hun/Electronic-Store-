@@ -30,7 +30,7 @@ class StoreProductRequest extends FormRequest
             'is_featured' => ['nullable', 'boolean'],
             'specifications' => ['nullable', 'array'],
             'images' => ['nullable', 'array'],
-            'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ];
     }
 }

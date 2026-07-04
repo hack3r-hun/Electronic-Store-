@@ -29,7 +29,7 @@ class CategoryController extends Controller
     public function store(StoreCategoryRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        $data['slug'] = $data['slug'] ?? Str::slug($data['name']);
+        $data['slug'] = $data['slug'] ?? $this->uniqueSlug($data['name']);
         $data['is_active'] = $request->boolean('is_active', true);
 
         if ($request->hasFile('image')) {
@@ -51,7 +51,8 @@ class CategoryController extends Controller
     public function update(StoreCategoryRequest $request, Category $category): RedirectResponse
     {
         $data = $request->validated();
-        $data['slug'] = $data['slug'] ?? Str::slug($data['name']);
+        // Keep the existing slug when the field is left blank so category URLs stay stable.
+        $data['slug'] = $data['slug'] ?? $category->slug;
         $data['is_active'] = $request->boolean('is_active', true);
 
         if ($request->hasFile('image')) {
@@ -75,5 +76,19 @@ class CategoryController extends Controller
         $category->delete();
 
         return redirect()->route('admin.categories.index')->with('success', 'Category deleted.');
+    }
+
+    protected function uniqueSlug(string $name): string
+    {
+        $base = Str::slug($name);
+        $slug = $base;
+        $suffix = 2;
+
+        while (Category::where('slug', $slug)->exists()) {
+            $slug = "{$base}-{$suffix}";
+            $suffix++;
+        }
+
+        return $slug;
     }
 }

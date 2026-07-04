@@ -7,18 +7,40 @@ use App\Enums\PaymentStatus;
 use App\Models\Order;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 
 class OrderService
 {
+    public function __construct(
+        protected InventoryService $inventoryService
+    ) {}
+
     public function updateStatus(Order $order, OrderStatus $status): Order
     {
-        $order->update(['status' => $status]);
+        DB::transaction(function () use ($order, $status) {
+            $previous = $order->status;
 
-        if ($status === OrderStatus::Delivered && $order->payment_method->value === 'cod') {
-            $order->update(['payment_status' => PaymentStatus::Paid]);
-        }
+            $order->update(['status' => $status]);
+
+            if ($status === OrderStatus::Delivered && $order->payment_method->value === 'cod') {
+                $order->update(['payment_status' => PaymentStatus::Paid]);
+            }
+
+            if ($status === OrderStatus::Cancelled && $previous !== OrderStatus::Cancelled) {
+                $this->restockItems($order);
+            }
+        });
 
         return $order->fresh();
+    }
+
+    protected function restockItems(Order $order): void
+    {
+        foreach ($order->items()->with('product')->get() as $item) {
+            if ($item->product) {
+                $this->inventoryService->restoreStock($item->product, $item->quantity);
+            }
+        }
     }
 
     public function generateInvoicePdf(Order $order): Response

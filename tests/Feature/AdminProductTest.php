@@ -36,7 +36,9 @@ class AdminProductTest extends TestCase
             'is_active' => true,
         ]);
 
-        $response->assertRedirect(route('admin.products.index'));
+        $product = Product::where('sku', 'LED-NEW')->first();
+
+        $response->assertRedirect(route('admin.products.edit', $product));
         $this->assertDatabaseHas('products', ['sku' => 'LED-NEW']);
     }
 

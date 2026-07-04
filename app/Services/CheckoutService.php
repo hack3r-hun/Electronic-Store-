@@ -8,6 +8,7 @@ use App\Enums\PaymentStatus;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
+use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -60,7 +61,7 @@ class CheckoutService
 
             $order = Order::create([
                 'user_id' => Auth::id(),
-                'order_number' => 'EM-'.strtoupper(Str::random(8)),
+                'order_number' => $this->generateOrderNumber(),
                 'status' => $paymentMethod === PaymentMethod::Cod
                     ? OrderStatus::AwaitingCod
                     : OrderStatus::Pending,
@@ -81,6 +82,16 @@ class CheckoutService
             }
 
             foreach ($items as $item) {
+                // Atomic guarded decrement: fails (0 rows) if concurrent checkouts
+                // already consumed the stock, rolling back the whole order.
+                $affected = Product::whereKey($item->product_id)
+                    ->where('stock_quantity', '>=', $item->quantity)
+                    ->decrement('stock_quantity', $item->quantity);
+
+                if ($affected === 0) {
+                    throw new \RuntimeException("Not enough stock for {$item->product->name}.");
+                }
+
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $item->product_id,
@@ -90,8 +101,6 @@ class CheckoutService
                     'unit_price' => $item->product->effective_price,
                     'line_total' => $item->line_total,
                 ]);
-
-                $item->product->decrement('stock_quantity', $item->quantity);
             }
 
             Payment::create([
@@ -108,5 +117,14 @@ class CheckoutService
 
             return $order->load('items');
         });
+    }
+
+    protected function generateOrderNumber(): string
+    {
+        do {
+            $orderNumber = 'EM-'.strtoupper(Str::random(8));
+        } while (Order::where('order_number', $orderNumber)->exists());
+
+        return $orderNumber;
     }
 }

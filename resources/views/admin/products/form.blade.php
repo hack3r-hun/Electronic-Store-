@@ -44,10 +44,14 @@
                 <label class="block text-sm font-medium mb-2">Description</label>
                 <textarea name="description" rows="4" class="input-field">{{ old('description', $product->description) }}</textarea>
             </div>
-            <div>
-                <label class="block text-sm font-medium mb-2">Images</label>
+            <x-admin.image-uploader
+                label="Product Images"
+                hint="Choose photos (max 5MB). Crop each image, then click Save Product to upload."
+                existing-hint="Current images on the store. Add more below — new uploads become the main image."
+                :aspect-ratio="1"
+            >
                 @if($product->exists && $product->images->isNotEmpty())
-                    <div class="flex flex-wrap gap-3 mb-3">
+                    <x-slot:existingImages>
                         @foreach($product->images as $image)
                             <div class="relative group">
                                 <img src="{{ $image->url }}" alt="" class="w-20 h-20 object-cover rounded-xl border border-slate-100">
@@ -62,13 +66,11 @@
                                 </form>
                             </div>
                         @endforeach
-                    </div>
+                    </x-slot:existingImages>
                 @endif
-                <input type="file" name="images[]" multiple accept="image/jpeg,image/png,image/webp,image/jpg" class="input-field">
-                <p class="text-xs text-slate-500 mt-1">Upload photos (JPG, PNG, WebP — max 2MB each). New uploads become the main image.</p>
                 @error('images')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
                 @error('images.*')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
-            </div>
+            </x-admin.image-uploader>
             <div class="flex gap-6">
                 <label class="flex items-center gap-2"><input type="checkbox" name="is_active" value="1" @checked(old('is_active', $product->is_active ?? true)) class="rounded text-brand-600"> Active</label>
                 <label class="flex items-center gap-2"><input type="checkbox" name="is_featured" value="1" @checked(old('is_featured', $product->is_featured ?? false)) class="rounded text-brand-600"> Featured</label>

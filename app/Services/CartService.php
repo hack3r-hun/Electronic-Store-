@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\CartItem;
 use App\Models\Product;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
@@ -53,7 +54,19 @@ class CartService
             ($cartItem->exists ? $cartItem->quantity : 0) + $quantity,
             $product->stock_quantity
         );
-        $cartItem->save();
+
+        try {
+            $cartItem->save();
+        } catch (UniqueConstraintViolationException) {
+            // A concurrent request created the row first — merge into it instead.
+            $existing = CartItem::where($attributes)->first();
+
+            if ($existing) {
+                $existing->update([
+                    'quantity' => min($existing->quantity + $quantity, $product->stock_quantity),
+                ]);
+            }
+        }
     }
 
     public function update(CartItem $cartItem, int $quantity): void

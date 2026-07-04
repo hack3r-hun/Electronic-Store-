@@ -49,12 +49,22 @@ class CheckoutController extends Controller
                     ->with('info', 'Order saved. Configure Stripe keys in .env to enable card payments.');
             }
 
-            $this->paymentService->sendOrderConfirmation($order);
+            try {
+                $this->paymentService->sendOrderConfirmation($order);
+            } catch (\Throwable $e) {
+                report($e);
+            }
 
             return redirect()->route('checkout.success', $order)
                 ->with('success', 'Order placed successfully! Pay cash on delivery.');
         } catch (\RuntimeException $e) {
             return back()->with('error', $e->getMessage())->withInput();
+        } catch (\Throwable $e) {
+            report($e);
+
+            return back()
+                ->with('error', 'Something went wrong while placing your order. Please try again.')
+                ->withInput();
         }
     }
 
@@ -100,7 +110,11 @@ class CheckoutController extends Controller
                 ->with('error', 'Payment not completed. Please try again.');
         }
 
-        $this->paymentService->sendOrderConfirmation($order->fresh());
+        try {
+            $this->paymentService->sendOrderConfirmation($order->fresh());
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         return redirect()->route('checkout.success', $order)
             ->with('success', 'Payment successful! Thank you for your order.');

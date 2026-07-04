@@ -7,7 +7,7 @@
     <title>@yield('page-title', 'Admin') — {{ shop_name() }}</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=dm-sans:400,500,600,700&display=swap" rel="stylesheet" />
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/admin.js', 'resources/js/app.js'])
 </head>
 <body class="font-sans antialiased bg-slate-50 admin-layout" x-data="{ sidebarOpen: false }" data-scroll-reveal="off">
     <x-toast-stack />

@@ -39,7 +39,8 @@ class ProductController extends Controller
         $product = Product::create($data);
         $this->storeImages($product, $request->file('images', []));
 
-        return redirect()->route('admin.products.index')->with('success', 'Product created.');
+        return redirect()->route('admin.products.edit', $product)
+            ->with('success', 'Product created. Images are live on the store.');
     }
 
     public function edit(Product $product): View
@@ -60,7 +61,8 @@ class ProductController extends Controller
         $product->update($data);
         $this->storeImages($product, $request->file('images', []));
 
-        return redirect()->route('admin.products.index')->with('success', 'Product updated.');
+        return redirect()->route('admin.products.edit', $product)
+            ->with('success', 'Product saved. Uploaded images are live on the store.');
     }
 
     public function destroy(Product $product): RedirectResponse
@@ -85,7 +87,11 @@ class ProductController extends Controller
         $image->delete();
 
         if ($wasPrimary) {
-            $product->images()->first()?->update(['is_primary' => true]);
+            $next = $product->images()->get()->first(
+                fn (ProductImage $img) => MediaUrl::localFileExists($img->path)
+            ) ?? $product->images()->first();
+
+            $next?->update(['is_primary' => true]);
         }
 
         return back()->with('success', 'Image removed.');
@@ -98,6 +104,11 @@ class ProductController extends Controller
         if ($files === []) {
             return;
         }
+
+        $product->images()
+            ->get()
+            ->filter(fn (ProductImage $image) => ! MediaUrl::isLocalPath($image->path))
+            ->each(fn (ProductImage $image) => $image->delete());
 
         $product->images()->update(['is_primary' => false]);
 

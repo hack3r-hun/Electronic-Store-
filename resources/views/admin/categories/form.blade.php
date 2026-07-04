@@ -21,13 +21,24 @@
                     @endforeach
                 </select>
             </div>
-            <div>
-                <label class="block text-sm font-medium mb-2">Category Image</label>
+            <x-admin.image-uploader
+                name="image"
+                :multiple="false"
+                :aspect-ratio="4/3"
+                label="Category Image"
+                hint="Choose an image (max 5MB). Crop it, then click Save."
+                existing-hint="Current category image. Upload a new one to replace it after save."
+            >
                 @if($category->image)
-                    <img src="{{ $category->image_url }}" alt="" class="w-32 h-24 object-cover rounded-xl mb-3 border border-slate-100">
+                    <x-slot:existingImages>
+                        <div class="relative">
+                            <img src="{{ $category->image_url }}" alt="" class="w-32 h-24 object-cover rounded-xl border border-slate-100">
+                            <span class="absolute -top-2 -left-2 text-[10px] font-bold bg-brand-600 text-white px-1.5 py-0.5 rounded">Current</span>
+                        </div>
+                    </x-slot:existingImages>
                 @endif
-                <input type="file" name="image" accept="image/*" class="input-field">
-            </div>
+                @error('image')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
+            </x-admin.image-uploader>
             <div>
                 <label class="block text-sm font-medium mb-2">Description</label>
                 <textarea name="description" rows="3" class="input-field">{{ old('description', $category->description) }}</textarea>
