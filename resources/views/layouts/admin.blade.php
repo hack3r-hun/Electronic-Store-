@@ -35,6 +35,7 @@
                 @php
                     $links = [
                         ['route' => 'admin.dashboard', 'label' => 'Dashboard', 'match' => 'admin.dashboard', 'icon' => 'chart'],
+                        ['route' => 'admin.statistics.index', 'label' => 'Statistics', 'match' => 'admin.statistics.*', 'icon' => 'chart'],
                         ['route' => 'admin.products.index', 'label' => 'Products', 'match' => 'admin.products.*', 'icon' => 'cube'],
                         ['route' => 'admin.categories.index', 'label' => 'Categories', 'match' => 'admin.categories.*', 'icon' => 'folder'],
                         ['route' => 'admin.orders.index', 'label' => 'Orders', 'match' => 'admin.orders.*', 'icon' => 'cart'],

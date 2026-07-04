@@ -123,16 +123,21 @@ class PageSmokeTest extends TestCase
         $this->actingAs($this->admin);
 
         $this->get(route('admin.dashboard'))->assertOk();
+        $this->get(route('admin.statistics.index'))->assertOk();
+        $this->get(route('admin.statistics.index', ['period' => 'day']))->assertOk();
+        $this->get(route('admin.statistics.index', ['period' => 'year', 'year' => now()->year]))->assertOk();
         $this->get(route('admin.products.index'))->assertOk();
+        $this->get(route('admin.products.index', ['search' => 'Smoke', 'status' => 'active', 'stock' => 'low', 'per_page' => 10]))->assertOk();
         $this->get(route('admin.products.create'))->assertOk();
         $this->get(route('admin.products.edit', $this->product))->assertOk();
         $this->get(route('admin.categories.index'))->assertOk();
         $this->get(route('admin.categories.create'))->assertOk();
         $this->get(route('admin.categories.edit', $category))->assertOk();
         $this->get(route('admin.orders.index'))->assertOk();
-        $this->get(route('admin.orders.index', ['status' => 'awaiting_cod']))->assertOk();
+        $this->get(route('admin.orders.index', ['status' => 'awaiting_cod', 'payment_method' => 'cod', 'search' => 'Smoke', 'per_page' => 10]))->assertOk();
         $this->get(route('admin.orders.show', $order))->assertOk();
         $this->get(route('admin.customers.index'))->assertOk();
+        $this->get(route('admin.customers.index', ['search' => $this->customer->email, 'orders' => 'with', 'sort' => 'orders', 'per_page' => 10]))->assertOk();
         $this->get(route('admin.messages.index'))->assertOk();
         $this->get(route('admin.messages.show', $message))->assertOk();
         $this->get(route('admin.pages.index'))->assertOk();

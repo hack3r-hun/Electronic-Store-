@@ -17,6 +17,8 @@ class ProductController extends Controller
 {
     public function index(Request $request): View
     {
+        $perPage = $this->perPage($request);
+
         $products = Product::with(['category', 'images'])
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = $request->string('search')->toString();
@@ -37,13 +39,13 @@ class ProductController extends Controller
                 default => $query,
             })
             ->latest()
-            ->paginate(20)
+            ->paginate($perPage)
             ->withQueryString();
 
         $categories = Category::orderBy('name')->get();
         $archivedCount = Product::onlyTrashed()->count();
 
-        return view('admin.products.index', compact('products', 'categories', 'archivedCount'));
+        return view('admin.products.index', compact('products', 'categories', 'archivedCount', 'perPage'));
     }
 
     public function archived(Request $request): View
@@ -187,5 +189,12 @@ class ProductController extends Controller
                 'sort_order' => $existingCount + $index,
             ]);
         }
+    }
+
+    protected function perPage(Request $request): int
+    {
+        $perPage = (int) $request->input('per_page', 20);
+
+        return in_array($perPage, [10, 20, 50, 100], true) ? $perPage : 20;
     }
 }

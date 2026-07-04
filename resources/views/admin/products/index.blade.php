@@ -17,7 +17,7 @@
     </x-reveal>
 
     <x-reveal type="fade-up" delay="60">
-        <form method="GET" class="admin-card mb-6 grid grid-cols-1 md:grid-cols-5 gap-3">
+        <form method="GET" class="admin-card mb-6 grid grid-cols-1 md:grid-cols-6 gap-3">
             <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name or SKU" class="input-field md:col-span-2">
             <select name="category" class="input-field">
                 <option value="">All categories</option>
@@ -35,7 +35,12 @@
                 <option value="low" @selected(request('stock') === 'low')>Low stock</option>
                 <option value="out" @selected(request('stock') === 'out')>Out of stock</option>
             </select>
-            <div class="md:col-span-5 flex flex-wrap gap-2">
+            <select name="per_page" class="input-field" onchange="this.form.submit()">
+                @foreach([10, 20, 50, 100] as $size)
+                    <option value="{{ $size }}" @selected($perPage === $size)>{{ $size }} / page</option>
+                @endforeach
+            </select>
+            <div class="md:col-span-6 flex flex-wrap gap-2">
                 <button type="submit" class="btn-primary !py-2.5 !px-5 text-sm">Filter</button>
                 <a href="{{ route('admin.products.index') }}" class="btn-outline !py-2.5 !px-5 text-sm">Reset</a>
                 <a href="{{ route('admin.products.index', ['status' => 'active']) }}" class="admin-action-link">Active</a>
