@@ -17,3 +17,4 @@ tests
 .idea
 .vscode
 public/hot
+public/storage

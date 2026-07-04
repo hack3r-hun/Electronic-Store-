@@ -51,6 +51,39 @@ class AdminProductTest extends TestCase
         $response->assertForbidden();
     }
 
+    public function test_deleting_product_image_does_not_delete_product(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $category = Category::create(['name' => 'Bulbs', 'slug' => 'bulbs', 'is_active' => true]);
+        $product = Product::create([
+            'category_id' => $category->id,
+            'name' => 'LED Bulb',
+            'slug' => 'led-bulb',
+            'sku' => 'LED-1',
+            'price' => 100,
+            'stock_quantity' => 5,
+            'is_active' => true,
+        ]);
+        $primary = $product->images()->create(['path' => 'https://example.com/a.jpg', 'is_primary' => true, 'sort_order' => 0]);
+        $other = $product->images()->create(['path' => 'https://example.com/b.jpg', 'is_primary' => false, 'sort_order' => 1]);
+
+        $this->actingAs($admin)
+            ->delete(route('admin.products.images.destroy', [$product, $primary]))
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('products', ['id' => $product->id]);
+        $this->assertDatabaseMissing('product_images', ['id' => $primary->id]);
+        $this->assertTrue($other->fresh()->is_primary);
+
+        // The edit page must not nest the image-delete form inside the product
+        // form — the button references a standalone form instead.
+        $page = $this->actingAs($admin)->get(route('admin.products.edit', $product));
+        $page->assertOk();
+        $page->assertSee('form="delete-image-'.$other->id.'"', false);
+    }
+
     public function test_non_admin_cannot_write_products(): void
     {
         $user = User::factory()->create();

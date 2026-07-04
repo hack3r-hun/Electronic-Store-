@@ -58,12 +58,16 @@
                                 @if($image->is_primary)
                                     <span class="absolute -top-2 -left-2 text-[10px] font-bold bg-brand-600 text-white px-1.5 py-0.5 rounded">Main</span>
                                 @endif
-                                <form action="{{ route('admin.products.images.destroy', [$product, $image]) }}" method="POST" class="absolute -top-2 -right-2"
-                                      onsubmit="return confirm('Remove this image?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="w-6 h-6 rounded-full bg-red-500 text-white text-xs leading-none opacity-0 group-hover:opacity-100 transition-opacity" title="Remove image">×</button>
-                                </form>
+                                {{-- Submits the standalone delete form below via the form attribute:
+                                     a nested <form> here would be dropped by the browser and the
+                                     button would submit the product form (deleting the product). --}}
+                                <button
+                                    type="submit"
+                                    form="delete-image-{{ $image->id }}"
+                                    onclick="return confirm('Remove this image?')"
+                                    class="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white text-xs leading-none opacity-0 group-hover:opacity-100 transition-opacity"
+                                    title="Remove image"
+                                >×</button>
                             </div>
                         @endforeach
                     </x-slot:existingImages>
@@ -82,4 +86,18 @@
             <a href="{{ route('admin.products.index') }}" class="btn-outline">Cancel</a>
         </div>
     </form>
+
+    @if($product->exists)
+        @foreach($product->images as $image)
+            <form
+                id="delete-image-{{ $image->id }}"
+                action="{{ route('admin.products.images.destroy', [$product, $image]) }}"
+                method="POST"
+                class="hidden"
+            >
+                @csrf
+                @method('DELETE')
+            </form>
+        @endforeach
+    @endif
 @endsection
