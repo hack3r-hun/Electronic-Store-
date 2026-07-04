@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', shop_name()) — {{ shop_config('tagline') }}</title>
+    <title>@yield('title', shop_name()) - {{ shop_config('tagline') }}</title>
     <meta name="description" content="@yield('meta_description', shop_config('tagline'))">
     <link rel="canonical" href="{{ url()->current() }}">
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -16,7 +16,7 @@
     {{-- Top bar --}}
     <div class="bg-brand-50 border-b border-brand-100 text-slate-600 text-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex flex-wrap items-center justify-between gap-2">
-            <p>{{ shop_config('contact_phone') }} · {{ shop_config('contact_address') }}</p>
+            <p>{{ shop_config('contact_phone') }} - {{ shop_config('contact_address') }}</p>
             @if((float) shop_config('free_shipping_threshold', 0) > 0)
                 <p class="text-brand-700 font-medium">Free delivery on orders above {{ shop_money(shop_config('free_shipping_threshold')) }}</p>
             @endif

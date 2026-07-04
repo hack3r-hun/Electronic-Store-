@@ -64,7 +64,7 @@
                         <div class="flex items-center gap-3 mb-6">
                             <span class="inline-flex items-center gap-2 text-green-700 bg-green-50 px-4 py-2 rounded-xl text-sm font-semibold">
                                 <span class="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></span>
-                                In Stock — {{ $product->stock_quantity }} available
+                                In Stock - {{ $product->stock_quantity }} available
                             </span>
                             @if($product->is_low_stock)
                                 <span class="text-brand-600 text-sm font-medium">Only a few left!</span>
@@ -88,7 +88,7 @@
                             <input type="hidden" name="product_id" value="{{ $product->id }}">
                             <div class="flex items-center border-2 border-slate-200 rounded-xl overflow-hidden bg-white focus-within:border-brand-500 transition-colors">
                                 <button type="button" onclick="const i=document.getElementById('qty');if(i.value>1)i.value--"
-                                        class="px-4 py-3 text-slate-500 hover:bg-slate-50 hover:text-brand-700 transition-colors text-xl font-bold">−</button>
+                                        class="px-4 py-3 text-slate-500 hover:bg-slate-50 hover:text-brand-700 transition-colors text-xl font-bold">-</button>
                                 <input type="number" name="quantity" id="qty" value="1" min="1" max="{{ $product->stock_quantity }}"
                                        class="w-16 py-3 text-center border-0 focus:ring-0 font-semibold">
                                 <button type="button" onclick="const i=document.getElementById('qty');if(i.value<{{ $product->stock_quantity }})i.value++"
@@ -96,7 +96,7 @@
                             </div>
                             <button type="submit" class="btn-primary flex-1 text-base py-4 inline-flex items-center justify-center gap-2" :disabled="submitting" :class="submitting && 'opacity-60 cursor-not-allowed'">
                                 <x-icon name="cart" class="w-5 h-5" />
-                                <span x-text="submitting ? 'Adding…' : 'Add to Cart'">Add to Cart</span>
+                                <span x-text="submitting ? 'Adding...' : 'Add to Cart'">Add to Cart</span>
                             </button>
                         </form>
                     @endif

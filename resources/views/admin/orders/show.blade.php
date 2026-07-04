@@ -10,7 +10,7 @@
                 <div class="space-y-3">
                     @foreach($order->items as $item)
                         <div class="flex justify-between text-sm border-b border-slate-50 pb-2">
-                            <span>{{ $item->product_name }} × {{ $item->quantity }}</span>
+                            <span>{{ $item->product_name }} x {{ $item->quantity }}</span>
                             <span class="font-medium">{{ shop_money($item->line_total) }}</span>
                         </div>
                     @endforeach

@@ -53,14 +53,14 @@
                                 <td class="text-slate-500">{{ $order->created_at->format('M d, Y') }}</td>
                                 <td class="text-right">
                                     <div class="flex items-center justify-end gap-3">
-                                        <a href="{{ route('admin.orders.show', $order) }}" class="admin-action-link">View →</a>
+                                        <a href="{{ route('admin.orders.show', $order) }}" class="admin-action-link">View</a>
                                         <x-confirm-delete
                                             :action="route('admin.orders.destroy', $order)"
                                             title="Delete order?"
                                             :item="$order->order_number"
                                             message="The order and its items will be permanently deleted. Stock for its products will be returned unless the order was already cancelled."
                                         >
-                                            <span class="sr-only">Delete</span>
+                                            Delete
                                         </x-confirm-delete>
                                     </div>
                                 </td>
