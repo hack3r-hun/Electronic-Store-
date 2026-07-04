@@ -6,19 +6,23 @@ use App\Http\Controllers\Controller;
 use App\Models\CartItem;
 use App\Models\Product;
 use App\Services\CartService;
+use App\Services\CheckoutService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class CartController extends Controller
 {
-    public function __construct(protected CartService $cartService) {}
+    public function __construct(
+        protected CartService $cartService,
+        protected CheckoutService $checkoutService
+    ) {}
 
     public function index()
     {
         $items = $this->cartService->items();
-        $subtotal = $this->cartService->subtotal();
+        $totals = $this->checkoutService->calculateTotals();
 
-        return view('storefront.cart.index', compact('items', 'subtotal'));
+        return view('storefront.cart.index', compact('items', 'totals'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -34,7 +38,11 @@ class CartController extends Controller
             return back()->with('error', 'This product is out of stock.');
         }
 
-        $this->cartService->add($product, (int) ($request->quantity ?? 1));
+        $clamped = $this->cartService->add($product, (int) ($request->quantity ?? 1));
+
+        if ($clamped) {
+            return back()->with('info', "{$product->name} added — only {$product->stock_quantity} in stock, so the quantity was adjusted.");
+        }
 
         return back()->with('success', "{$product->name} added to cart.");
     }
@@ -42,7 +50,11 @@ class CartController extends Controller
     public function update(Request $request, CartItem $cartItem): RedirectResponse
     {
         $request->validate(['quantity' => ['required', 'integer', 'min:0']]);
-        $this->cartService->update($cartItem, (int) $request->quantity);
+        $clamped = $this->cartService->update($cartItem, (int) $request->quantity);
+
+        if ($clamped) {
+            return back()->with('info', "Only {$cartItem->product->stock_quantity} in stock — quantity adjusted.");
+        }
 
         return back()->with('success', 'Cart updated.');
     }

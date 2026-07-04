@@ -29,6 +29,11 @@
                     <input type="number" step="0.01" name="shipping_flat" value="{{ old('shipping_flat', $settings['shipping_flat']) }}" class="input-field">
                 </div>
             </div>
+            <div>
+                <label class="block text-sm font-medium mb-2">Free Shipping Above</label>
+                <input type="number" step="0.01" name="free_shipping_threshold" value="{{ old('free_shipping_threshold', $settings['free_shipping_threshold']) }}" class="input-field">
+                <p class="text-xs text-slate-500 mt-1">Orders at or above this subtotal ship free. Set to 0 to disable.</p>
+            </div>
             <p class="text-xs text-slate-500">Stripe keys are configured via .env (STRIPE_KEY, STRIPE_SECRET, STRIPE_WEBHOOK_SECRET)</p>
         </div>
 

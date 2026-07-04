@@ -24,6 +24,13 @@ class CheckoutService
         $subtotal = $this->cartService->subtotal();
         $tax = round($subtotal * (shop_config('tax_rate', 0) / 100), 2);
         $shipping = $subtotal > 0 ? (float) shop_config('shipping_flat', 0) : 0;
+
+        $freeShippingThreshold = (float) shop_config('free_shipping_threshold', 0);
+
+        if ($freeShippingThreshold > 0 && $subtotal >= $freeShippingThreshold) {
+            $shipping = 0;
+        }
+
         $total = $subtotal + $tax + $shipping;
 
         return compact('subtotal', 'tax', 'shipping', 'total');

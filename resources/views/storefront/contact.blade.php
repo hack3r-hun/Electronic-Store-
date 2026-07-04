@@ -97,7 +97,7 @@
 
             <div class="space-y-4" x-data="{ open: null }">
                 @foreach([
-                    ['q' => 'What are your delivery options?', 'a' => 'We offer standard delivery across the city. Free delivery on orders above Rs. 5,000. Bulk orders may qualify for express delivery — contact us for details.'],
+                    ['q' => 'What are your delivery options?', 'a' => 'We offer standard delivery across the city.'.((float) shop_config('free_shipping_threshold', 0) > 0 ? ' Free delivery on orders above '.shop_money(shop_config('free_shipping_threshold')).'.' : '').' Bulk orders may qualify for express delivery — contact us for details.'],
                     ['q' => 'Do you accept bulk or wholesale orders?', 'a' => 'Yes! Contractors and businesses can reach out for volume pricing on wiring, pipes, fasteners, and electrical components.'],
                     ['q' => 'What payment methods do you accept?', 'a' => 'We accept online card payments via Stripe and Cash on Delivery (COD) for eligible areas.'],
                     ['q' => 'Can I return a product?', 'a' => 'Unused items in original packaging can be returned within 7 days. Electrical components must be unopened for safety reasons.'],

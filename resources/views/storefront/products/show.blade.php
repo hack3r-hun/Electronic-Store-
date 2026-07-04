@@ -75,7 +75,13 @@
                     <p class="text-slate-600 leading-relaxed mb-8 text-lg">{{ $product->description }}</p>
 
                     @if($product->is_in_stock)
-                        <form action="{{ route('cart.store') }}" method="POST" class="flex flex-wrap items-stretch gap-4 mb-8">
+                        <form
+                            action="{{ route('cart.store') }}"
+                            method="POST"
+                            class="flex flex-wrap items-stretch gap-4 mb-8"
+                            x-data="{ submitting: false }"
+                            @submit="if (submitting) { $event.preventDefault(); return; } submitting = true"
+                        >
                             @csrf
                             <input type="hidden" name="product_id" value="{{ $product->id }}">
                             <div class="flex items-center border-2 border-slate-200 rounded-xl overflow-hidden bg-white focus-within:border-brand-500 transition-colors">
@@ -86,9 +92,9 @@
                                 <button type="button" onclick="const i=document.getElementById('qty');if(i.value<{{ $product->stock_quantity }})i.value++"
                                         class="px-4 py-3 text-slate-500 hover:bg-slate-50 hover:text-brand-700 transition-colors text-xl font-bold">+</button>
                             </div>
-                            <button type="submit" class="btn-primary flex-1 text-base py-4 inline-flex items-center justify-center gap-2">
+                            <button type="submit" class="btn-primary flex-1 text-base py-4 inline-flex items-center justify-center gap-2" :disabled="submitting" :class="submitting && 'opacity-60 cursor-not-allowed'">
                                 <x-icon name="cart" class="w-5 h-5" />
-                                Add to Cart
+                                <span x-text="submitting ? 'Adding…' : 'Add to Cart'">Add to Cart</span>
                             </button>
                         </form>
                     @endif

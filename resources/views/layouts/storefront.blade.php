@@ -17,7 +17,9 @@
     <div class="bg-brand-50 border-b border-brand-100 text-slate-600 text-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex flex-wrap items-center justify-between gap-2">
             <p>{{ shop_config('contact_phone') }} · {{ shop_config('contact_address') }}</p>
-            <p class="text-brand-700 font-medium">Free delivery on orders above {{ shop_money(5000) }}</p>
+            @if((float) shop_config('free_shipping_threshold', 0) > 0)
+                <p class="text-brand-700 font-medium">Free delivery on orders above {{ shop_money(shop_config('free_shipping_threshold')) }}</p>
+            @endif
         </div>
     </div>
 

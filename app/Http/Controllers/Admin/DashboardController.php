@@ -21,7 +21,7 @@ class DashboardController extends Controller
             'total_customers' => User::role('customer')->count(),
             'unread_messages' => ContactMessage::where('is_read', false)->count(),
             'low_stock' => Product::whereColumn('stock_quantity', '<=', 'low_stock_threshold')->count(),
-            'revenue' => Order::whereIn('payment_status', ['paid', 'pending'])->sum('total'),
+            'revenue' => Order::where('payment_status', 'paid')->sum('total'),
         ];
 
         $recentOrders = Order::with('user')->latest()->take(5)->get();

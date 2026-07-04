@@ -8,6 +8,7 @@ if (! function_exists('shop_config')) {
             'tagline' => 'shop_tagline',
             'tax_rate' => 'tax_rate',
             'shipping_flat' => 'shipping_flat',
+            'free_shipping_threshold' => 'free_shipping_threshold',
             'contact_email' => 'contact_email',
             'contact_phone' => 'contact_phone',
             'contact_address' => 'contact_address',
@@ -19,7 +20,7 @@ if (! function_exists('shop_config')) {
                     $value = \App\Models\Setting::get($map[$key]);
 
                     if ($value !== null && $value !== '') {
-                        return in_array($key, ['tax_rate', 'shipping_flat'], true)
+                        return in_array($key, ['tax_rate', 'shipping_flat', 'free_shipping_threshold'], true)
                             ? (float) $value
                             : $value;
                     }

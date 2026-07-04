@@ -15,9 +15,10 @@ class OrderPlaced extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
-    public bool $afterCommit = true;
-
-    public function __construct(public Order $order) {}
+    public function __construct(public Order $order)
+    {
+        $this->afterCommit();
+    }
 
     public function envelope(): Envelope
     {

@@ -33,16 +33,13 @@ class CartService
         return $this->items()->sum(fn (CartItem $item) => $item->line_total);
     }
 
-    public function add(Product $product, int $quantity = 1): void
+    /**
+     * @return bool true when the stored quantity was clamped below the request
+     */
+    public function add(Product $product, int $quantity = 1): bool
     {
-        if ($quantity < 1) {
-            return;
-        }
-
-        $quantity = min($quantity, $product->stock_quantity);
-
-        if ($quantity < 1) {
-            return;
+        if ($quantity < 1 || $product->stock_quantity < 1) {
+            return false;
         }
 
         $attributes = Auth::check()
@@ -50,10 +47,8 @@ class CartService
             : ['session_id' => session()->getId(), 'product_id' => $product->id];
 
         $cartItem = CartItem::firstOrNew($attributes);
-        $cartItem->quantity = min(
-            ($cartItem->exists ? $cartItem->quantity : 0) + $quantity,
-            $product->stock_quantity
-        );
+        $requestedTotal = ($cartItem->exists ? $cartItem->quantity : 0) + $quantity;
+        $cartItem->quantity = min($requestedTotal, $product->stock_quantity);
 
         try {
             $cartItem->save();
@@ -62,26 +57,34 @@ class CartService
             $existing = CartItem::where($attributes)->first();
 
             if ($existing) {
+                $requestedTotal = $existing->quantity + $quantity;
                 $existing->update([
-                    'quantity' => min($existing->quantity + $quantity, $product->stock_quantity),
+                    'quantity' => min($requestedTotal, $product->stock_quantity),
                 ]);
             }
         }
+
+        return $requestedTotal > $product->stock_quantity;
     }
 
-    public function update(CartItem $cartItem, int $quantity): void
+    /**
+     * @return bool true when the stored quantity was clamped below the request
+     */
+    public function update(CartItem $cartItem, int $quantity): bool
     {
         $this->authorizeItem($cartItem);
 
         if ($quantity < 1) {
             $cartItem->delete();
 
-            return;
+            return false;
         }
 
         $cartItem->update([
             'quantity' => min($quantity, $cartItem->product->stock_quantity),
         ]);
+
+        return $quantity > $cartItem->product->stock_quantity;
     }
 
     public function remove(CartItem $cartItem): void

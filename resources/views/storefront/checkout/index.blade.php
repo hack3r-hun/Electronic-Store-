@@ -6,7 +6,24 @@
     <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <h1 class="section-title mb-10 animate-fade-in-up">Checkout</h1>
 
-        <form action="{{ route('checkout.store') }}" method="POST" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        @if($errors->any())
+            <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm animate-fade-in">
+                <p class="font-semibold mb-1">Please fix the following before placing your order:</p>
+                <ul class="list-disc list-inside space-y-0.5">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <form
+            action="{{ route('checkout.store') }}"
+            method="POST"
+            class="grid grid-cols-1 lg:grid-cols-3 gap-8"
+            x-data="{ submitting: false }"
+            @submit="if (submitting) { $event.preventDefault(); return; } submitting = true"
+        >
             @csrf
             <div class="lg:col-span-2 space-y-6 animate-fade-in-up">
                 <div class="bg-white rounded-2xl border border-slate-100 shadow-card p-6">
@@ -90,13 +107,16 @@
                     <div class="space-y-2 text-sm border-t border-slate-100 pt-4">
                         <div class="flex justify-between"><span class="text-slate-500">Subtotal</span><span>{{ shop_money($totals['subtotal']) }}</span></div>
                         <div class="flex justify-between"><span class="text-slate-500">Tax</span><span>{{ shop_money($totals['tax']) }}</span></div>
-                        <div class="flex justify-between"><span class="text-slate-500">Shipping</span><span>{{ shop_money($totals['shipping']) }}</span></div>
+                        <div class="flex justify-between"><span class="text-slate-500">Shipping</span><span>{{ $totals['shipping'] > 0 ? shop_money($totals['shipping']) : 'Free' }}</span></div>
                         <div class="flex justify-between text-lg font-bold pt-2">
                             <span>Total</span>
                             <span class="text-brand-700">{{ shop_money($totals['total']) }}</span>
                         </div>
                     </div>
-                    <button type="submit" class="btn-primary w-full mt-6">Place Order</button>
+                    <button type="submit" class="btn-primary w-full mt-6" :disabled="submitting" :class="submitting && 'opacity-60 cursor-not-allowed'">
+                        <span x-show="!submitting">Place Order</span>
+                        <span x-show="submitting" x-cloak>Placing Order…</span>
+                    </button>
                 </div>
             </div>
         </form>

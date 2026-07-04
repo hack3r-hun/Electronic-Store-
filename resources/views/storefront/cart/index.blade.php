@@ -48,11 +48,17 @@
                     <div class="bg-white rounded-2xl border border-slate-100 shadow-card p-6 sticky top-24">
                         <h2 class="font-semibold text-slate-900 text-lg mb-6">Order Summary</h2>
                         <div class="space-y-3 text-sm">
-                            <div class="flex justify-between"><span class="text-slate-500">Subtotal</span><span class="font-medium">{{ shop_money($subtotal) }}</span></div>
-                            <div class="flex justify-between"><span class="text-slate-500">Shipping</span><span class="font-medium">{{ shop_money(shop_config('shipping_flat')) }}</span></div>
+                            <div class="flex justify-between"><span class="text-slate-500">Subtotal</span><span class="font-medium">{{ shop_money($totals['subtotal']) }}</span></div>
+                            @if($totals['tax'] > 0)
+                                <div class="flex justify-between"><span class="text-slate-500">Tax</span><span class="font-medium">{{ shop_money($totals['tax']) }}</span></div>
+                            @endif
+                            <div class="flex justify-between">
+                                <span class="text-slate-500">Shipping</span>
+                                <span class="font-medium">{{ $totals['shipping'] > 0 ? shop_money($totals['shipping']) : 'Free' }}</span>
+                            </div>
                             <div class="border-t border-slate-100 pt-3 flex justify-between text-lg font-bold">
                                 <span>Total</span>
-                                <span class="text-brand-700">{{ shop_money($subtotal + shop_config('shipping_flat')) }}</span>
+                                <span class="text-brand-700">{{ shop_money($totals['total']) }}</span>
                             </div>
                         </div>
                         <a href="{{ route('checkout.index') }}" class="btn-primary w-full mt-6 text-center">Proceed to Checkout</a>

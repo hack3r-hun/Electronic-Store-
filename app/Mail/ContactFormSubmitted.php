@@ -14,9 +14,10 @@ class ContactFormSubmitted extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
-    public bool $afterCommit = true;
-
-    public function __construct(public ContactMessage $message) {}
+    public function __construct(public ContactMessage $message)
+    {
+        $this->afterCommit();
+    }
 
     public function envelope(): Envelope
     {
