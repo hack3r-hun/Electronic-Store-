@@ -1,7 +1,9 @@
 @extends('layouts.storefront')
 
 @section('title', $product->name)
-@section('meta_description', Str::limit($product->description, 160))
+{{-- Fall back to the tagline: a null value here would make Blade open a
+     content-block buffer that is never closed. --}}
+@section('meta_description', Str::limit($product->description ?? '', 160) ?: shop_config('tagline'))
 
 @section('content')
     <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">

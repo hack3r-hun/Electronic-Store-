@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -114,5 +115,142 @@ class AdminProductTest extends TestCase
 
         $this->assertDatabaseHas('products', ['sku' => 'LED-1', 'name' => 'LED Bulb']);
         $this->assertDatabaseMissing('products', ['sku' => 'HAX-1']);
+    }
+
+    public function test_admin_delete_archives_product_without_removing_database_record(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $category = Category::create(['name' => 'Bulbs', 'slug' => 'bulbs', 'is_active' => true]);
+        $product = Product::create([
+            'category_id' => $category->id,
+            'name' => 'Archive Bulb',
+            'slug' => 'archive-bulb',
+            'sku' => 'ARC-1',
+            'price' => 100,
+            'stock_quantity' => 5,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($admin)
+            ->delete(route('admin.products.destroy', $product))
+            ->assertRedirect(route('admin.products.index'));
+
+        $this->assertSoftDeleted('products', ['id' => $product->id]);
+        $this->assertDatabaseHas('products', ['id' => $product->id, 'sku' => 'ARC-1']);
+
+        $this->get(route('products.show', $product->slug))->assertNotFound();
+        $this->get(route('products.index'))->assertDontSee('Archive Bulb');
+        $this->actingAs($admin)->get(route('admin.products.index'))->assertDontSee('Archive Bulb');
+        $this->actingAs($admin)->get(route('admin.products.archived'))->assertSee('Archive Bulb');
+    }
+
+    public function test_admin_can_bulk_archive_and_restore_products(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $category = Category::create(['name' => 'Bulbs', 'slug' => 'bulbs', 'is_active' => true]);
+        $first = Product::create([
+            'category_id' => $category->id,
+            'name' => 'Bulk One',
+            'slug' => 'bulk-one',
+            'sku' => 'BLK-1',
+            'price' => 100,
+            'stock_quantity' => 5,
+            'is_active' => true,
+        ]);
+        $second = Product::create([
+            'category_id' => $category->id,
+            'name' => 'Bulk Two',
+            'slug' => 'bulk-two',
+            'sku' => 'BLK-2',
+            'price' => 100,
+            'stock_quantity' => 5,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($admin)
+            ->delete(route('admin.products.bulk-destroy'), ['product_ids' => [$first->id, $second->id]])
+            ->assertRedirect(route('admin.products.index'));
+
+        $this->assertSoftDeleted('products', ['id' => $first->id]);
+        $this->assertSoftDeleted('products', ['id' => $second->id]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.products.restore', $first->id))
+            ->assertRedirect(route('admin.products.archived'));
+
+        $this->assertFalse($first->fresh()->trashed());
+        $this->assertTrue($second->fresh()->trashed());
+    }
+
+    public function test_order_item_snapshot_survives_archived_product(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $category = Category::create(['name' => 'Bulbs', 'slug' => 'bulbs', 'is_active' => true]);
+        $product = Product::create([
+            'category_id' => $category->id,
+            'name' => 'Snapshot Bulb',
+            'slug' => 'snapshot-bulb',
+            'sku' => 'SNP-1',
+            'price' => 100,
+            'stock_quantity' => 5,
+            'is_active' => true,
+        ]);
+        $order = Order::create([
+            'order_number' => 'TEST-ORDER-1',
+            'status' => 'pending',
+            'payment_method' => 'cod',
+            'payment_status' => 'pending',
+            'subtotal' => 100,
+            'tax' => 0,
+            'shipping' => 0,
+            'total' => 100,
+            'shipping_address' => ['full_name' => 'Test User', 'phone' => '03001234567', 'address_line' => 'Street', 'city' => 'Lahore'],
+        ]);
+        $order->items()->create([
+            'product_id' => $product->id,
+            'product_name' => $product->name,
+            'product_sku' => $product->sku,
+            'quantity' => 1,
+            'unit_price' => 100,
+            'line_total' => 100,
+        ]);
+
+        $this->actingAs($admin)->delete(route('admin.products.destroy', $product));
+
+        $this->assertSoftDeleted('products', ['id' => $product->id]);
+        $this->assertDatabaseHas('order_items', [
+            'order_id' => $order->id,
+            'product_id' => $product->id,
+            'product_name' => 'Snapshot Bulb',
+            'product_sku' => 'SNP-1',
+        ]);
+    }
+
+    public function test_non_admin_cannot_archive_restore_or_view_archived_products(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('customer');
+
+        $category = Category::create(['name' => 'Bulbs', 'slug' => 'bulbs', 'is_active' => true]);
+        $product = Product::create([
+            'category_id' => $category->id,
+            'name' => 'Protected Bulb',
+            'slug' => 'protected-bulb',
+            'sku' => 'PRT-1',
+            'price' => 100,
+            'stock_quantity' => 5,
+            'is_active' => true,
+        ]);
+        $product->delete();
+
+        $this->actingAs($user)->get(route('admin.products.archived'))->assertForbidden();
+        $this->actingAs($user)->post(route('admin.products.restore', $product->id))->assertForbidden();
+        $this->actingAs($user)->delete(route('admin.products.bulk-destroy'), ['product_ids' => [$product->id]])->assertForbidden();
     }
 }

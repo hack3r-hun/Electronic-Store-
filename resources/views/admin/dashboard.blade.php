@@ -42,10 +42,11 @@
         @endforeach
     </div>
 
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
         @foreach([
             ['label' => 'Pending Orders', 'value' => $stats['pending_orders'], 'bg' => 'bg-brand-100', 'text' => 'text-brand-700', 'icon' => 'clock'],
             ['label' => 'Products', 'value' => $stats['active_products'].' / '.$stats['total_products'], 'bg' => 'bg-blue-100', 'text' => 'text-blue-700', 'icon' => 'cube'],
+            ['label' => 'Archived', 'value' => $stats['archived_products'], 'bg' => 'bg-slate-100', 'text' => 'text-slate-700', 'icon' => 'inbox'],
             ['label' => 'Unread Messages', 'value' => $stats['unread_messages'], 'bg' => 'bg-purple-100', 'text' => 'text-purple-700', 'icon' => 'mail'],
             ['label' => 'Low Stock', 'value' => $stats['low_stock'], 'bg' => 'bg-red-100', 'text' => 'text-red-700', 'icon' => 'warning'],
         ] as $i => $item)
@@ -114,7 +115,7 @@
                         <span class="w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center"><x-icon name="warning" class="w-4 h-4" /></span>
                         Low Stock Alert
                     </h2>
-                    <a href="{{ route('admin.products.index') }}" class="text-sm text-brand-600 font-semibold hover:text-brand-700 transition-colors">Manage →</a>
+                    <a href="{{ route('admin.products.index', ['stock' => 'low']) }}" class="text-sm text-brand-600 font-semibold hover:text-brand-700 transition-colors">Manage -></a>
                 </div>
                 <div class="p-6">
                     @if($lowStockProducts->isEmpty())

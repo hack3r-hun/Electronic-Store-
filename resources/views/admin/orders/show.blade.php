@@ -51,6 +51,19 @@
                 </form>
             </div>
             <a href="{{ route('admin.orders.invoice', $order) }}" target="_blank" class="btn-outline w-full text-center block">Print Invoice</a>
+
+            <div class="bg-white rounded-2xl border border-red-100 shadow-card p-6">
+                <h2 class="font-semibold text-red-700 mb-2">Danger Zone</h2>
+                <p class="text-sm text-slate-500 mb-4">Deleting removes the order permanently and returns its stock (unless already cancelled).</p>
+                <x-confirm-delete
+                    :action="route('admin.orders.destroy', $order)"
+                    title="Delete order?"
+                    :item="$order->order_number"
+                    message="The order and its items will be permanently deleted. Stock for its products will be returned unless the order was already cancelled."
+                >
+                    Delete Order
+                </x-confirm-delete>
+            </div>
         </div>
     </div>
 @endsection

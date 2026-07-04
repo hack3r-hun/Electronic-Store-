@@ -18,6 +18,7 @@ class DashboardController extends Controller
             'pending_orders' => Order::whereIn('status', ['pending', 'awaiting_cod'])->count(),
             'total_products' => Product::count(),
             'active_products' => Product::where('is_active', true)->count(),
+            'archived_products' => Product::onlyTrashed()->count(),
             'total_customers' => User::role('customer')->count(),
             'unread_messages' => ContactMessage::where('is_read', false)->count(),
             'low_stock' => Product::whereColumn('stock_quantity', '<=', 'low_stock_threshold')->count(),

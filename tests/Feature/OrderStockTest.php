@@ -102,6 +102,78 @@ class OrderStockTest extends TestCase
         $this->assertEquals(20, $product->fresh()->stock_quantity);
     }
 
+    public function test_deleting_an_order_removes_it_and_restores_stock(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('customer');
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $product = $this->makeProduct(20);
+
+        $this->actingAs($user);
+        app(CartService::class)->add($product, 3);
+        $this->post(route('checkout.store'), $this->checkoutPayload())->assertRedirect();
+        $this->assertEquals(17, $product->fresh()->stock_quantity);
+
+        $order = Order::firstOrFail();
+
+        $this->actingAs($admin)
+            ->delete(route('admin.orders.destroy', $order))
+            ->assertRedirect(route('admin.orders.index'));
+
+        $this->assertDatabaseMissing('orders', ['id' => $order->id]);
+        $this->assertDatabaseMissing('order_items', ['order_id' => $order->id]);
+        $this->assertEquals(20, $product->fresh()->stock_quantity);
+    }
+
+    public function test_deleting_a_cancelled_order_does_not_double_restore_stock(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('customer');
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $product = $this->makeProduct(20);
+
+        $this->actingAs($user);
+        app(CartService::class)->add($product, 3);
+        $this->post(route('checkout.store'), $this->checkoutPayload())->assertRedirect();
+
+        $order = Order::firstOrFail();
+
+        $this->actingAs($admin)
+            ->patch(route('admin.orders.status', $order), ['status' => 'cancelled'])
+            ->assertRedirect();
+        $this->assertEquals(20, $product->fresh()->stock_quantity);
+
+        $this->actingAs($admin)
+            ->delete(route('admin.orders.destroy', $order))
+            ->assertRedirect(route('admin.orders.index'));
+
+        $this->assertEquals(20, $product->fresh()->stock_quantity);
+    }
+
+    public function test_non_admin_cannot_delete_orders(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('customer');
+
+        $product = $this->makeProduct(20);
+
+        $this->actingAs($user);
+        app(CartService::class)->add($product, 1);
+        $this->post(route('checkout.store'), $this->checkoutPayload())->assertRedirect();
+
+        $order = Order::firstOrFail();
+
+        $this->actingAs($user)
+            ->delete(route('admin.orders.destroy', $order))
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('orders', ['id' => $order->id]);
+    }
+
     public function test_stale_unpaid_stripe_orders_are_expired_and_stock_restored(): void
     {
         $user = User::factory()->create();

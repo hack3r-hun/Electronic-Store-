@@ -4,16 +4,23 @@ namespace App\Models;
 
 use App\Support\HomeCache;
 use App\Support\MediaUrl;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
 {
+    use SoftDeletes;
+
     protected static function booted(): void
     {
         static::saved(fn () => HomeCache::flush());
         static::deleted(fn () => HomeCache::flush());
+        static::restored(fn () => HomeCache::flush());
+        static::softDeleted(function (Product $product) {
+            \App\Models\CartItem::where('product_id', $product->id)->delete();
+        });
     }
 
     protected $fillable = [

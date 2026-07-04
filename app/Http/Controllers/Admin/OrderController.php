@@ -46,6 +46,15 @@ class OrderController extends Controller
         return back()->with('success', 'Order status updated.');
     }
 
+    public function destroy(Order $order): RedirectResponse
+    {
+        $orderNumber = $order->order_number;
+        $this->orderService->deleteOrder($order);
+
+        return redirect()->route('admin.orders.index')
+            ->with('success', "Order {$orderNumber} deleted and stock returned.");
+    }
+
     public function invoice(Order $order): Response
     {
         return $this->orderService->streamInvoicePdf($order);

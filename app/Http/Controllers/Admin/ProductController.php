@@ -9,16 +9,59 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use App\Support\MediaUrl;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class ProductController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $products = Product::with(['category', 'images'])->latest()->paginate(20);
+        $products = Product::with(['category', 'images'])
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = $request->string('search')->toString();
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('sku', 'like', "%{$search}%");
+                });
+            })
+            ->when($request->filled('category'), fn ($query) => $query->where('category_id', $request->integer('category')))
+            ->when($request->filled('status'), fn ($query) => match ($request->status) {
+                'active' => $query->where('is_active', true),
+                'inactive' => $query->where('is_active', false),
+                default => $query,
+            })
+            ->when($request->filled('stock'), fn ($query) => match ($request->stock) {
+                'out' => $query->where('stock_quantity', 0),
+                'low' => $query->whereColumn('stock_quantity', '<=', 'low_stock_threshold')->where('stock_quantity', '>', 0),
+                default => $query,
+            })
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
 
-        return view('admin.products.index', compact('products'));
+        $categories = Category::orderBy('name')->get();
+        $archivedCount = Product::onlyTrashed()->count();
+
+        return view('admin.products.index', compact('products', 'categories', 'archivedCount'));
+    }
+
+    public function archived(Request $request): View
+    {
+        $products = Product::onlyTrashed()
+            ->with(['category', 'images'])
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = $request->string('search')->toString();
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('sku', 'like', "%{$search}%");
+                });
+            })
+            ->latest('deleted_at')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('admin.products.archived', compact('products'));
     }
 
     public function create(): View
@@ -67,13 +110,32 @@ class ProductController extends Controller
 
     public function destroy(Product $product): RedirectResponse
     {
-        foreach ($product->images as $image) {
-            MediaUrl::deleteLocalFile($image->path);
-        }
-
         $product->delete();
 
-        return redirect()->route('admin.products.index')->with('success', 'Product deleted.');
+        return redirect()->route('admin.products.index')->with('success', 'Product archived and hidden from the store.');
+    }
+
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'product_ids' => ['required', 'array', 'min:1'],
+            'product_ids.*' => ['integer', 'exists:products,id'],
+        ]);
+
+        $products = Product::whereIn('id', $data['product_ids'])->get();
+        $products->each->delete();
+        $count = $products->count();
+
+        return redirect()->route('admin.products.index')
+            ->with('success', "{$count} products archived and hidden from the store.");
+    }
+
+    public function restore(int $product): RedirectResponse
+    {
+        $product = Product::onlyTrashed()->findOrFail($product);
+        $product->restore();
+
+        return redirect()->route('admin.products.archived')->with('success', "{$product->name} restored.");
     }
 
     public function destroyImage(Product $product, ProductImage $image): RedirectResponse

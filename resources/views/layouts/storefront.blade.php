@@ -86,10 +86,22 @@
                 <a href="{{ route('cart.index') }}" class="flex items-center gap-2 py-2.5 font-medium text-slate-700 hover:text-brand-700">
                     <x-icon name="cart" class="w-5 h-5" /> Cart @if($cartCount > 0)({{ $cartCount }})@endif
                 </a>
-                @guest
+                @auth
+                    <div class="border-t border-slate-100 mt-2 pt-2">
+                        @if(auth()->user()->isAdmin())
+                            <a href="{{ route('admin.dashboard') }}" class="block py-2.5 font-medium text-brand-700">Admin Dashboard</a>
+                        @endif
+                        <a href="{{ route('account.orders.index') }}" class="block py-2.5 font-medium text-slate-700 hover:text-brand-700">My Orders</a>
+                        <a href="{{ route('profile.edit') }}" class="block py-2.5 font-medium text-slate-700 hover:text-brand-700">My Account</a>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="block w-full text-left py-2.5 font-medium text-red-600 hover:text-red-700">Logout</button>
+                        </form>
+                    </div>
+                @else
                     <a href="{{ route('login') }}" class="block py-2.5 font-medium text-brand-700">Login</a>
                     <a href="{{ route('register') }}" class="block py-2.5 font-medium text-brand-700">Sign Up</a>
-                @endguest
+                @endauth
             </div>
         </div>
     </header>

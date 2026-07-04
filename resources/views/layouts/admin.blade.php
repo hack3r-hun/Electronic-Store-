@@ -89,6 +89,8 @@
                         @unless(request()->routeIs('admin.dashboard'))
                             @php
                                 $adminBackHref = match (true) {
+                                    // Section index pages go back to the dashboard, not themselves.
+                                    request()->routeIs('admin.*.index') => route('admin.dashboard'),
                                     request()->routeIs('admin.products.*') => route('admin.products.index'),
                                     request()->routeIs('admin.categories.*') => route('admin.categories.index'),
                                     request()->routeIs('admin.orders.*') => route('admin.orders.index'),

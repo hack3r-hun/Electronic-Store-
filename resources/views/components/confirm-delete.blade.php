@@ -5,6 +5,7 @@
     'message' => 'This action cannot be undone. Are you sure you want to continue?',
     'item' => null,
     'confirmLabel' => 'Delete',
+    'formId' => null,
 ])
 
 <div
@@ -75,6 +76,17 @@
                     <p class="confirm-modal-item">{{ $item }}</p>
                 @endif
 
+                @if($formId)
+                <div class="confirm-modal-actions">
+                    <button type="button" @click="open = false" class="btn-outline !py-2.5 !px-5 text-sm w-full sm:w-auto">
+                        Cancel
+                    </button>
+                    <button type="submit" form="{{ $formId }}" class="btn-danger !py-2.5 !px-5 text-sm w-full sm:w-auto">
+                        <x-icon name="trash" class="w-4 h-4" />
+                        {{ $confirmLabel }}
+                    </button>
+                </div>
+                @else
                 <form method="POST" action="{{ $action }}" class="confirm-modal-actions">
                     @csrf
                     @method($method)
@@ -86,6 +98,7 @@
                         {{ $confirmLabel }}
                     </button>
                 </form>
+                @endif
             </div>
         </div>
     </template>

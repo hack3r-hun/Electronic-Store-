@@ -45,6 +45,12 @@ class CheckoutService
         }
 
         foreach ($items as $item) {
+            if (! $item->product || ! $item->product->is_active) {
+                $productName = $item->product?->name ?? 'A product';
+
+                throw new \RuntimeException("{$productName} is no longer available.");
+            }
+
             if ($item->quantity > $item->product->stock_quantity) {
                 throw new \RuntimeException("Not enough stock for {$item->product->name}.");
             }
@@ -92,6 +98,7 @@ class CheckoutService
                 // Atomic guarded decrement: fails (0 rows) if concurrent checkouts
                 // already consumed the stock, rolling back the whole order.
                 $affected = Product::whereKey($item->product_id)
+                    ->where('is_active', true)
                     ->where('stock_quantity', '>=', $item->quantity)
                     ->decrement('stock_quantity', $item->quantity);
 

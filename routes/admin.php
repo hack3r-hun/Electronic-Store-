@@ -14,9 +14,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::resource('categories', CategoryController::class)->except(['show']);
+    Route::delete('products/bulk-destroy', [ProductController::class, 'bulkDestroy'])->name('products.bulk-destroy');
+    Route::get('products/archived', [ProductController::class, 'archived'])->name('products.archived');
+    Route::post('products/{product}/restore', [ProductController::class, 'restore'])->name('products.restore');
     Route::resource('products', ProductController::class)->except(['show']);
     Route::delete('products/{product}/images/{image}', [ProductController::class, 'destroyImage'])->name('products.images.destroy');
-    Route::resource('orders', OrderController::class)->only(['index', 'show']);
+    Route::resource('orders', OrderController::class)->only(['index', 'show', 'destroy']);
     Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
     Route::get('orders/{order}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
 

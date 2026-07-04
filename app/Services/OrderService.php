@@ -34,6 +34,18 @@ class OrderService
         return $order->fresh();
     }
 
+    public function deleteOrder(Order $order): void
+    {
+        DB::transaction(function () use ($order) {
+            // Return stock unless a cancellation already restored it.
+            if ($order->status !== OrderStatus::Cancelled) {
+                $this->restockItems($order);
+            }
+
+            $order->delete();
+        });
+    }
+
     protected function restockItems(Order $order): void
     {
         foreach ($order->items()->with('product')->get() as $item) {

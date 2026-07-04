@@ -12,7 +12,8 @@ class CartService
 {
     public function items(): Collection
     {
-        $query = CartItem::with('product.images');
+        $query = CartItem::with('product.images')
+            ->whereHas('product', fn ($query) => $query->where('is_active', true));
 
         if (Auth::check()) {
             $query->where('user_id', Auth::id());
@@ -74,6 +75,12 @@ class CartService
     {
         $this->authorizeItem($cartItem);
 
+        if (! $cartItem->product || ! $cartItem->product->is_active) {
+            $cartItem->delete();
+
+            return false;
+        }
+
         if ($quantity < 1) {
             $cartItem->delete();
 
@@ -112,6 +119,12 @@ class CartService
                 ->first();
 
             if ($existing) {
+                if (! $guestItem->product || ! $guestItem->product->is_active) {
+                    $guestItem->delete();
+
+                    return;
+                }
+
                 $existing->update([
                     'quantity' => min(
                         $existing->quantity + $guestItem->quantity,
@@ -120,6 +133,12 @@ class CartService
                 ]);
                 $guestItem->delete();
             } else {
+                if (! $guestItem->product || ! $guestItem->product->is_active) {
+                    $guestItem->delete();
+
+                    return;
+                }
+
                 $guestItem->update([
                     'user_id' => $userId,
                     'session_id' => null,
